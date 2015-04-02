@@ -1,24 +1,23 @@
-###DBx: a prototype of high performance in memory database based on Intel RTM.
+###YDB: high performance in-memory database based on RTM
 Team memeber: Zhiyuan Yang, Zhizhou Yang
 
 ###SUMMARY
-Summarize your project in no more than 2-3 sentences. Describe what you plan to do and what parallel systems you will be working with. Example one-liners include (you should add a bit more detail):
+We are going to use Intel RTM to implement a prototype of in-memory database that is high performance and scalable on multicore machine.
 
-We are going to implement an optimized Smoothed Particle Hydrodynamics fluid solver on the NVIDIA GPUs in the lab.
-We are going port the Go runtime to Blacklight.
-We are going to create optimized implementations of sparse-matrix multiplication on both GPU and multi-core CPU platforms, and perform a detailed analysis of both systems' performance characteristics.
-We are going to back-engineer the unpublished machine specifications of the GPU in the tablet my partner just purchased.
-We are going to implement two possible algorithms for a real-time computer vision application on a mobile device and measure their energy consumption in the lab.
 
 ###BACKGROUND
-If your project involves accelerating a compute-intensive application, describe the application or piece of the application you are going to implement in more detail. This description need only be a few paragraphs. It might be helpful to include a block diagram or pseudocode of the basic idea. An important detail is what aspects of the problem might benefit from parallelism? and why?
+Traditionally, databases use fine-grained locks and atomic operations to do synchronization. While it can provide good performance and reasonable scalability, the resulting code is very complex to reason and it is difficult to make sure the correctness on different memory models of processors. 
+
+Recently, Intel introduces restricted transactional memory (RTM) support in Haswell processors. Using RTM instructions, one can transactionally execute a part of code or explicitly abort in the middle of transactional execution. If a transaction conflicts with other concurrent memory operations, the processor hardware will discard all its writes and roll back the system to the begining of the execution. All the transaction properties are guaranteed by hardware, so this provides a much easier way to do synchronizations comparing.
 
 ###THE CHALLENGE
-Describe why the problem is challenging. What aspects of the problem might make it difficult to parallelize? In other words, what to you hope to learn by doing the project?
+Although RTM is a promising solution in synchronizaiton problem, it's challenging to use it to implement a in-memory database with high performance and good scalability. First, even it sounds straightforward to use RTM for synchronization, its programming model is different from other synchronization mechanism and currently we have no experience in it. Second, it's not clear how to adopt RTM programming model in db's architecture and also it's difficult to debug RTM related bug becaues within transactional execution many debugging related instructions are forbidded. Third, RTM's abstraction is very simple, but we are not sure about the real performance characteristics of Intel's implementation and it needs efforts to achieve high performance and good scalability.
 
-Describe the workload: what are the dependencies, what are its memory access characteristics? (is there locality? is there a high communication to computation ratio?), is there divergent execution?
-Describe constraints: What are the properties of the system that make mapping the workload to it challenging?
-RESOURCES. Describe the resources (type of computers, starter code, etc.) you will use. What code base will you start from? Are you starting from scratch or using an existing piece of code? Is there a book or paper that you are using as a reference (if so, provide a citation)? Are there any other resources you need, but haven't figured out how to obtain yet? Could you benefit from access to any special machines?
+###RESOURCES
+We are going to start our project from scratch.
+The computer we use should have CPUs of Haswell architecture and support RTM.
+There is one paper proposed by Z.Wang et al. in 2014 that realized a scalable in-memory database using RTM [1]. We learnt the idea in this paper and are trying to build our own database system on RTM.
+
 
 ###GOALS AND DELIVERABLES
 Describe the deliverables or goals of your project.
@@ -32,5 +31,16 @@ Systems project proposals should describe what the system will be capable of and
 PLATFORM CHOICE. Describe why the platform (computer and/or language) you have chosen is a good one for your needs. Why does it make sense to use this parallel system for the workload you have chosen?
 
 ###SCHEDULE
+| Date        | Milestone  |
+| ------------- |-------------------------|
+| 4.9      | right-aligned |
+| 4.16      | centered      |
+| 4.23 | are neat      |
+| 4.30 | are neat      |
+| 5.7 | are neat      |
+| 5.11 | Parallelism Competition and Final Report      |
 Produce a schedule for your project. Your schedule should have at least one item to do per week. List what you plan to get done each week from now until the parallelism competition in order to meet your project goals. Keep in mind that due to other classes, you'll have more time to work some weeks than others (work that into the schedule). You will need to re-evaluate your progress at the end of each week and update this schedule accordingly. Note the intermediate checkpoint deadline is April 16th. In your schedule we encourage you to be precise as precise as possible. It's often helpful to work backward in time from your deliverables and goals, writing down all the little things you'll need to do (establish the dependencies!).
 
+###REFERENCES
+
+[1] Wang, Zhaoguo, et al. "Using restricted transactional memory to build a scalable in-memory database." Proceedings of the Ninth European Conference on Computer Systems. ACM, 2014.
