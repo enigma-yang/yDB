@@ -1,0 +1,148 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset='utf-8'>
+    <meta http-equiv="X-UA-Compatible" content="chrome=1">
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+    <link href='https://fonts.googleapis.com/css?family=Architects+Daughter' rel='stylesheet' type='text/css'>
+    <link rel="stylesheet" type="text/css" href="stylesheets/stylesheet.css" media="screen">
+    <link rel="stylesheet" type="text/css" href="stylesheets/pygment_trac.css" media="screen">
+    <link rel="stylesheet" type="text/css" href="stylesheets/print.css" media="print">
+
+    <!--[if lt IE 9]>
+    <script src="//html5shiv.googlecode.com/svn/trunk/html5.js"></script>
+    <![endif]-->
+
+    <title>Ydb by Zhiyuan-Yang</title>
+  </head>
+
+  <body>
+    <header>
+      <div class="inner">
+        <h1>Ydb</h1>
+        <h2>a prototype of high performance in memory database based on Intel RTM.</h2>
+        <a href="https://github.com/Zhiyuan-Yang/yDB" class="button"><small>View project on</small> GitHub</a>
+      </div>
+    </header>
+
+    <div id="content-wrapper">
+      <div class="inner clearfix">
+        <section id="main-content">
+          <h3>
+<a id="ydb-high-performance-and-scalable-in-memory-database-based-on-rtm" class="anchor" href="#ydb-high-performance-and-scalable-in-memory-database-based-on-rtm" aria-hidden="true"><span class="octicon octicon-link"></span></a>yDB: high performance and scalable in-memory database based on RTM</h3>
+
+<p>Team memeber: Zhiyuan Yang, Zhizhou Yang</p>
+
+<h3>
+<a id="summary" class="anchor" href="#summary" aria-hidden="true"><span class="octicon octicon-link"></span></a>SUMMARY</h3>
+
+<p>We are going to use Intel RTM to implement a prototype of in-memory database that is high performance and scalable on multicore machine.</p>
+
+<h3>
+<a id="background" class="anchor" href="#background" aria-hidden="true"><span class="octicon octicon-link"></span></a>BACKGROUND</h3>
+
+<p>Traditionally, databases use fine-grained locks and atomic operations to do synchronization. While it can provide good performance and reasonable scalability, the resulting code is very complex to reason and it is difficult to make sure the correctness on different memory models of processors. </p>
+
+<p>Recently, Intel introduces restricted transactional memory (RTM) support in Haswell processors. Using RTM instructions, one can transactionally execute a part of code or explicitly abort in the middle of transactional execution. If a transaction conflicts with other concurrent memory operations, the processor hardware will discard all its writes and roll back the system to the begining of the execution. All the transaction properties are guaranteed by hardware, so this provides a much easier way to do synchronizations comparing.</p>
+
+<h3>
+<a id="the-challenge" class="anchor" href="#the-challenge" aria-hidden="true"><span class="octicon octicon-link"></span></a>THE CHALLENGE</h3>
+
+<p>Although RTM is a promising solution in synchronizaiton problem, it is challenging to use it to implement a in-memory database with high performance and good scalability. </p>
+
+<p>Firstly, even it sounds straightforward to use RTM for synchronization, its programming model is different from other synchronization mechanism and currently we have no experience in it. </p>
+
+<p>Secondly, it is not clear how to adopt RTM programming model in database architecture and also it is difficult to debug RTM related bugs because within transactional execution many debugging related instructions are forbidded. </p>
+
+<p>Thirdly, RTM's abstraction is very simple, but we are not sure about the real performance characteristics of Intel's implementation and it needs efforts to achieve high performance and good scalability.</p>
+
+<h3>
+<a id="resources" class="anchor" href="#resources" aria-hidden="true"><span class="octicon octicon-link"></span></a>RESOURCES</h3>
+
+<p>We are going to start our project from scratch, but in case of the time pressure, we may use existing library such as B+ tree library if it can fit in our purpose well. </p>
+
+<p>For the database design, currently we are reading recent conference papers and investigating existing efforts on this topic. We found these papers [1][2][3] are very useful in high-performance in-memory database design and may adopt some ideas of them. </p>
+
+<p>To use RTM techinque, we need a machine with CPU that supports RTM, but we could not find such one in CMU.</p>
+
+<h3>
+<a id="goals-and-deliverables" class="anchor" href="#goals-and-deliverables" aria-hidden="true"><span class="octicon octicon-link"></span></a>GOALS AND DELIVERABLES</h3>
+
+<p>Our goal is to implement a high performance and scalable in-memory database using RTM technique. </p>
+
+<p>For the functionality, we would like to make it able to run TPC-C benchmark or YCSB benchmark. We are going to use B-tree based index and not going to implement hashtable based index. Due to the time pressure, we are not going to support the durability.</p>
+
+<p>For the performance, we would like to achieve the tps(transaction per second) no worse than the start-of-art in-memory database using fine-grained locks such as Silo in [2]. </p>
+
+<p>For the scalability, we would like to show it can scale linearly as the number of threads. Since current Intel RTM can only support at most 4 cores, we may only test the scalability from 1 threads to 8 threads. Also, the hyperthreading feature may affect the RTM performance, we expect the scalability may decrease after threads number exceeds 4.</p>
+
+<p>After this project, we expect we can demo the common database functionality and the testing result(data and graphs) about performance and scalability using TPC-C or YCSB benchmark.</p>
+
+<h3>
+<a id="schedule" class="anchor" href="#schedule" aria-hidden="true"><span class="octicon octicon-link"></span></a>SCHEDULE</h3>
+
+<table>
+<thead>
+<tr>
+<th>Date</th>
+<th>Milestone</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>4.9</td>
+<td>Design arthitecture of the database, learn to use RTM.</td>
+</tr>
+<tr>
+<td>4.16</td>
+<td>Realize our naive database architecture using RTM.</td>
+</tr>
+<tr>
+<td>4.23</td>
+<td>Evaluate the performance of yDB, figure out bottlenecks of the database</td>
+</tr>
+<tr>
+<td>4.30</td>
+<td>Optimize the implementation of yDB and try to achieve high performance in RTM.</td>
+</tr>
+<tr>
+<td>5.7</td>
+<td>Compare yDB with other transactional databases and make evaluations.</td>
+</tr>
+<tr>
+<td>5.11</td>
+<td>Parallelism competition and final report.</td>
+</tr>
+</tbody>
+</table>
+
+<h3>
+<a id="references" class="anchor" href="#references" aria-hidden="true"><span class="octicon octicon-link"></span></a>REFERENCES</h3>
+
+<p>[1] Wang, Zhaoguo, et al. "Using restricted transactional memory to build a scalable in-memory database." Proceedings of the Ninth European Conference on Computer Systems. ACM, 2014.</p>
+
+<p>[2] Kung, Hsiang-Tsung, and John T. Robinson. "On optimistic methods for concurrency control." ACM Transactions on Database Systems (TODS) 6.2 (1981): 213-226.</p>
+
+<p>[3] Tu, Stephen, et al. "Speedy transactions in multicore in-memory databases." Proceedings of the Twenty-Fourth ACM Symposium on Operating Systems Principles. ACM, 2013.</p>
+        </section>
+
+        <aside id="sidebar">
+          <a href="https://github.com/Zhiyuan-Yang/yDB/zipball/master" class="button">
+            <small>Download</small>
+            .zip file
+          </a>
+          <a href="https://github.com/Zhiyuan-Yang/yDB/tarball/master" class="button">
+            <small>Download</small>
+            .tar.gz file
+          </a>
+
+          <p class="repo-owner"><a href="https://github.com/Zhiyuan-Yang/yDB"></a> is maintained by <a href="https://github.com/Zhiyuan-Yang">Zhiyuan-Yang</a>.</p>
+
+          <p>This page was generated by <a href="https://pages.github.com">GitHub Pages</a> using the Architect theme by <a href="https://twitter.com/jasonlong">Jason Long</a>.</p>
+        </aside>
+      </div>
+    </div>
+
+  
+  </body>
+</html>
