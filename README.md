@@ -1,8 +1,8 @@
-###yDB: high performance and scalable in-memory database based on RTM
+###yDB: high-performance and scalable in-memory database based on RTM
 Team memeber: Zhiyuan Yang, Zhizhou Yang
 
 ###SUMMARY
-We are going to use Intel RTM to implement a prototype of in-memory database that is high performance and scalable on multicore machine.
+We are going to use Intel RTM to implement a prototype of in-memory database that is high-performance and scalable on multicore machine.
 
 
 ###BACKGROUND
@@ -28,7 +28,7 @@ To use RTM techinque, we need a machine with CPU that supports RTM, but we could
 
 
 ###GOALS AND DELIVERABLES
-Our goal is to implement a high performance and scalable in-memory database using RTM technique. 
+Our goal is to implement a high-performance and scalable in-memory database using RTM technique. 
 
 For the functionality, we would like to make it able to run TPC-C benchmark or YCSB benchmark. We are going to use B-tree based index and not going to implement hashtable based index. Due to the time pressure, we are not going to support the durability.
 
