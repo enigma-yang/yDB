@@ -53,15 +53,10 @@ After this project, we expect we can demo the common database functionality and 
 ###CHECKPOINT SUMMARY
 We have done the following things:
 1. Implemented coarse-grained hashtable based key-value store. 
-
 2. Realized coarse-grained B+ Tree based key-value store.
-
 3. Implemented basic performance testing framwork.
-
 4. Learned the design of Silo and DBX from papers.
-
 5. Learned RTM programming and performance characteristics.
-
 6. Learned Optimistic Concurrency Control.
 
 
