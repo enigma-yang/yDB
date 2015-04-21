@@ -27,7 +27,7 @@ For the database design, currently we are reading recent conference papers and i
 To use RTM techinque, we need a machine with CPU that supports RTM, but we could not find such one in CMU.
 
 
-###GOALS AND DELIVERABLES
+###GOALS AND DELIVERABLES (Proposal)
 Our goal is to implement a high-performance and scalable in-memory database using RTM technique. 
 
 For the functionality, we would like to make it able to run TPC-C benchmark or YCSB benchmark. We are going to use B-tree based index and not going to implement hashtable based index. Due to the time pressure, we are not going to support the durability.
@@ -38,7 +38,21 @@ For the scalability, we would like to show it can scale linearly as the number o
 
 After this project, we expect we can demo the common database functionality and the testing result(data and graphs) about performance and scalability using TPC-C or YCSB benchmark.
 
-###SCHEDULE
+
+###GOALS AND DELIVERABLES (Checkpoint)
+Our goal is still to implement a high-performance and scalable in-memory database using RTM technique.
+
+For the functionality, we only use derived version YCSB benchmark rather than TPC-C since TPC-C is too hard to implement. Moreover, we do not provide the support to SQL interfaces and use stored procedure instead, as we only focus on performance improvement.
+We will first implement hashtable based index and then expend it to the B+ Tree based index. 
+Due to the time pressure, we are not going to support the durability.
+
+For the performance, we would like to achieve the tps(transaction per second) no worse than the start-of-art in-memory database using fine-grained locks such as Silo in [2]. 
+
+For the scalability, we would like to show it can scale linearly as the number of threads. Since current Intel RTM can only support at most 4 cores, we may only test the scalability from 1 threads to 8 threads. Also, the hyperthreading feature may affect the RTM performance, we expect the scalability may decrease after threads number exceeds 4.
+
+After this project, we expect we can demo performance test and its result(data and graphs) about performance and scalability using only our YCSB benchmark.
+
+###SCHEDULE (Proposal)
 | Date        | Milestone  |
 | ------------- |-------------------------|
 | 4.9      | Design arthitecture of the database, learn to use RTM. |
@@ -47,6 +61,29 @@ After this project, we expect we can demo the common database functionality and 
 | 4.30 | Optimize the implementation of yDB and try to achieve high performance in RTM. |
 | 5.7 | Compare yDB with other transactional databases and make evaluations.  |
 | 5.11 | Parallelism competition and final report. |
+
+###CHECKPOINT SUMMARY
+1. Implemented coarse-grained hashtable based key-value store. 
+
+2. Realized coarse-grained B+ Tree based key-value store.
+
+3. Implemented basic performance testing framwork.
+
+4. Learned the design of Silo and DBX from papers.
+
+5. Learned RTM programming and performance characteristics.
+
+6. Learned Optimistic Concurrency Control.
+
+###SCHEDULE (Checkpoint)
+| Date        | Milestone  |
+| ----------- | ------------------------- |
+| 4.20 - 4.22 | Realize OCC using hashtable based kv store (YZY); Implement ycsb workloads (YZZ) |
+| 4.23 - 4.26 | Realize OCC using hashtable based kv store (YZY); Realize OCC on B+ Tree (YZZ) |
+| 4.27 - 4.29 | Apply RTM on hashtable based kv store (YZY); Realize OCC on B+ Tree (YZZ) |
+| 4.30 - 5.3 | Apply RTM on hashtable based kv store (YZY); Apply RTM on B+ Tree (YZZ) |
+| 5.4 - 5.6 | Apply RTM on B+ Tree (YZZ); Performance evaluations (YZY)  |
+| 5.7 - 5.10 | Final report. |
 
 ###REFERENCES
 
