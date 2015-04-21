@@ -30,7 +30,7 @@ To use RTM techinque, we need a machine with CPU that supports RTM, but we could
 ###GOALS AND DELIVERABLES (Proposal)
 Our goal is to implement a high-performance and scalable in-memory database using RTM technique. 
 
-For the functionality, we would like to make it able to run TPC-C benchmark or YCSB benchmark. We are going to use B-tree based index and not going to implement hashtable based index. Due to the time pressure, we are not going to support the durability.
+For the functionality, we would like to make it able to run TPC-C benchmark or YCSB benchmark. We are going to use B-tree based store and not going to implement hashtable based store. Due to the time pressure, we are not going to support the durability.
 
 For the performance, we would like to achieve the tps(transaction per second) no worse than the start-of-art in-memory database using fine-grained locks such as Silo in [2]. 
 
@@ -38,19 +38,6 @@ For the scalability, we would like to show it can scale linearly as the number o
 
 After this project, we expect we can demo the common database functionality and the testing result(data and graphs) about performance and scalability using TPC-C or YCSB benchmark.
 
-
-###GOALS AND DELIVERABLES (Checkpoint)
-Our goal is still to implement a high-performance and scalable in-memory database using RTM technique.
-
-For the functionality, we only use derived version YCSB benchmark rather than TPC-C since TPC-C is too hard to implement. Moreover, we do not provide the support to SQL interfaces and use stored procedure instead, as we only focus on performance improvement.
-We will first implement hashtable based index and then expend it to the B+ Tree based index. 
-Due to the time pressure, we are not going to support the durability.
-
-For the performance, we would like to achieve the tps(transaction per second) no worse than the start-of-art in-memory database using fine-grained locks such as Silo in [2]. 
-
-For the scalability, we would like to show it can scale linearly as the number of threads. Since current Intel RTM can only support at most 4 cores, we may only test the scalability from 1 threads to 8 threads. Also, the hyperthreading feature may affect the RTM performance, we expect the scalability may decrease after threads number exceeds 4.
-
-After this project, we expect we can demo performance test and its result(data and graphs) about performance and scalability using only our YCSB benchmark.
 
 ###SCHEDULE (Proposal)
 | Date        | Milestone  |
@@ -62,7 +49,9 @@ After this project, we expect we can demo performance test and its result(data a
 | 5.7 | Compare yDB with other transactional databases and make evaluations.  |
 | 5.11 | Parallelism competition and final report. |
 
+
 ###CHECKPOINT SUMMARY
+We have done the following things:
 1. Implemented coarse-grained hashtable based key-value store. 
 
 2. Realized coarse-grained B+ Tree based key-value store.
@@ -75,15 +64,33 @@ After this project, we expect we can demo performance test and its result(data a
 
 6. Learned Optimistic Concurrency Control.
 
-###SCHEDULE (Checkpoint)
+
+We have no preliminary result yet because we've not applied RTM technique on our key-value store and we didn't implement the YCSB workload.
+
+
+Currently we don't have serious issues. The RTM machine has been found(thanks to Prof. Kayvon and Prof. Dave), and other things are just time matter of time and hard working.
+
+###UPDATED GOALS AND DELIVERABLES
+Our goal is still to implement a high-performance and scalable in-memory database using RTM technique.
+
+For the functionality,we will only support as many features as needed to run YCSB benchmark, especially transaction feature on key-value store,  because we want to focus on improving performance. So we won't support SQL interface but use stored procedure instead. Also, durability will not be supported. We will still keep using B+ tree store but hashtable store may also be supported as a sideproduct of our development because we always start implementing features with a simplified hashtable store and then apply on B+ tree store.
+
+For the performance, we still keep the goal of achieving the tps(transaction per second) no worse than the start-of-art in-memory database such as Silo in [2]. As to the benchmark, since we don't have to support SQL interface, we have to implement derived version of existing benchmarks. So we decide to only use YCSB and not use TPC-C because implementing a derived version of TPC-C would take too much of time.
+
+For the scalability, we would like to show it can scale linearly as the number of threads. Since current Intel RTM can only support at most 4 cores, we may only test the scalability from 1 threads to 8 threads. Also, the hyperthreading feature may affect the RTM performance, we expect the scalability may decrease after threads number exceeds 4.
+
+After this project, we expect we can demo the performance and scalability (in data and graph) of our key-value store against our derived version of YCSB benchmark.
+
+
+###UPDATED SCHEDULE
 | Date        | Milestone  |
 | ----------- | ------------------------- |
-| 4.20 - 4.22 | Realize OCC using hashtable based kv store (YZY); Implement ycsb workloads (YZZ) |
-| 4.23 - 4.26 | Realize OCC using hashtable based kv store (YZY); Realize OCC on B+ Tree (YZZ) |
-| 4.27 - 4.29 | Apply RTM on hashtable based kv store (YZY); Realize OCC on B+ Tree (YZZ) |
-| 4.30 - 5.3 | Apply RTM on hashtable based kv store (YZY); Apply RTM on B+ Tree (YZZ) |
-| 5.4 - 5.6 | Apply RTM on B+ Tree (YZZ); Performance evaluations (YZY)  |
-| 5.7 - 5.10 | Final report. |
+| 4.20 - 4.22 | Implement OCC on hashtable based kv store (YZY); Implement ycsb workloads (YZZ) |
+| 4.23 - 4.26 | Implement OCC on hashtable based kv store (YZY); Implement OCC on B+ Tree (YZZ) |
+| 4.27 - 4.29 | Apply RTM on hashtable based kv store (YZY); Implemment OCC on B+ Tree (YZZ) |
+| 4.30 - 5.3 | Apply RTM on hashtable based kv store (YZY); Apply RTM on B+ Tree based kv store (YZZ) |
+| 5.4 - 5.6 | Apply RTM on B+ Tree based kv store(YZZ); Performance tuning and evaluations (YZY)  |
+| 5.7 - 5.10 | More performance tuning and final report. |
 
 ###REFERENCES
 
