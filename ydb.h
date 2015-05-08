@@ -39,7 +39,7 @@ public:
 	bool commit();
 	
 	/* restart a transaction */
-	void restart();
+	void reuse();
 
 private:
 	// <pointer to record, version number of record at the time of read>

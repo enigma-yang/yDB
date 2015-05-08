@@ -27,6 +27,8 @@ YCSBWorker::YCSBWorker(SpinBarrier* startBarrier, YDb* db, int id) {
 	this->numRTMAbort = 0;
 	this->id = id;
 	this->thread = new std::thread(&YCSBWorker::worker, this);
+	this->readTxn = db->newTxn();
+	this->updateTxn = db->newTxn();
 
 	// bind core
 	cpu_set_t cpuset;
@@ -42,8 +44,8 @@ void YCSBWorker::txnCreate(long k, long v) {
 }
 
 void YCSBWorker::txnRead(long k) {
-	// FIXME will this leak memory?
-	Txn* txn = db->newTxn();
+	Txn* txn = readTxn;
+	txn->reuse();
 
 	long v;
 	txn->read(k, (char *)&v, sizeof(v));
@@ -56,11 +58,11 @@ void YCSBWorker::txnRead(long k) {
 
 	numRTM += 2;
 	numRTMAbort += txn->abortCnt;
-	delete txn;
 }
 
 void YCSBWorker::txnUpdate(long k, long v) {
-	Txn* txn = db->newTxn();
+	Txn* txn = updateTxn;
+	txn->reuse();
 
 	txn->write(k, (char *)&v, sizeof(v));
 
@@ -72,7 +74,6 @@ void YCSBWorker::txnUpdate(long k, long v) {
 
 	numRTM += 1;
 	numRTMAbort += txn->abortCnt;
-	delete txn;
 }
 
 // TODO to be implemented
@@ -140,10 +141,10 @@ int main(int argc, char **argv) {
 	running = false;
 
 	/* collect stats */
-	int numCommit = 0;
-	int numAbort = 0;
-	int numRTM = 0;
-	int numRTMAbort = 0;
+	unsigned long numCommit = 0;
+	unsigned long numAbort = 0;
+	unsigned long numRTM = 0;
+	unsigned long numRTMAbort = 0;
 	for(std::vector<YCSBWorker*>::iterator it = workers.begin(); it != workers.end(); ++it) {
 		(*it)->thread->join();
 		numCommit += (*it)->numCommit;

@@ -31,6 +31,7 @@ RTM_EXEC2(lock, lockedByMe, numAbort,
 
 	// write phase
 	for (std::map<Record*, char*>::iterator it = writeValueSet.begin(); it != writeValueSet.end(); it++) {
+		// FIXME delete may be bottleneck
 		delete it->first->value;
 		it->first->value = it->second;
 		it->first->ver++;
@@ -75,7 +76,9 @@ void Txn::write(long k, char *buf, int size) {
 	writeValueSet[rp] = value;
 }
 
-void Txn::restart() {
+void Txn::reuse() {
 	readSet.clear();
 	writeSet.clear();
+	writeValueSet.clear();
+	abortCnt = 0;
 }
