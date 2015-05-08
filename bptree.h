@@ -13,11 +13,14 @@ using namespace std;
 class BPlusTree
 {
 private:
-    static const int minimumDegree = 16;
+    static const int minimumDegree = 32;
+
     static const int minKeyNum = minimumDegree - 1;
     static const int maxKeyNum = 2 * minimumDegree - 1;
+    
     static const int minChildNum = minimumDegree;
     static const int maxChildNum = 2 * minimumDegree;
+    
     static const int minLeafSlot = minKeyNum;
     static const int maxLeafSlot = maxKeyNum;
     class Node
@@ -25,6 +28,7 @@ private:
     public:
         bool isLeaf;
         int keyNum;
+        //char padding0[16];
 
         Node() { keyNum = 0;}
 
@@ -37,6 +41,7 @@ private:
     private:
         Node* child[maxChildNum];
         long key[maxKeyNum];
+        //char padding[8];
     public:
 		innerNode() {isLeaf = false;}
         virtual int getLower(int k);
@@ -63,6 +68,7 @@ private:
     Node *root;
     leafNode* leftHead;
     Lock *lock;
+    //char padding[8*29 + 256];
 
 private:
     void* get(Node* node, long key);

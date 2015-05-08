@@ -141,12 +141,14 @@ void* BPlusTree::get(Node* node, long key)
     void* v = NULL;
     while (node != NULL) {
         if (node->isLeaf) {
+            //cout << "Leaf: "<< sizeof(*(leafNode*)node) << endl;
             int slot = node->getLower(key) - 1;
             if (((leafNode*)node)->key[slot] == key) {
                 v = ((leafNode*)node)->value[slot];
             }
             return v;
         } else {
+            //cout << "Inner: "<< sizeof(*(innerNode*)node) << endl;
             int slot = node->getLower(key);
             node = ((innerNode*)node)->child[slot];
         }
