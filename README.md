@@ -11,6 +11,13 @@ The first figure shows the throughput of spin-lock and Silo performance using B+
 
 The second figure shows the throughput performance of our yDB implementation based on RTM. The is also a chart showing the detailed throughput of our database transactions on different number of threads. From the figure, it can be implied that we accessed a similar throughput level as Silo.
 
+Number of Threads | Throughput (ops/sec)
+------------ | -------------
+1	| 1.43E+06
+2	| 2.76E+06
+3	| 3.88E+06
+4	| 4.85E+06
+
 ![chart2](https://raw.githubusercontent.com/Zhiyuan-Yang/yDB/occ/chart2.png?token=AHtqN77Ok8P7OSXOdewGzm4Wf7Q1Vq42ks5VVoQLwA%3D%3D)
 
 ###BACKGROUND
