@@ -1,0 +1,2 @@
+BPlusTree.o: BPlusTree.cpp BPlusTree.hpp rtm.h
+main.o: main.cpp BPlusTree.hpp rtm.h

@@ -3,11 +3,15 @@
 int main()
 {
     BPlusTree bt;
-    int* p1 = 32;
-    int* p2 = 15;
-    bt.put(26, p1);
-    bt.put(29, p2);
-    void* r;
-    cout << bt.get(26, r) << endl;
-    cout << bt.get(28, r) << endl;
+    
+    bt.put(26, 123);
+    bt.put(29, 642);
+    long r;
+    map<long, long> res = bt.getrange(1,36);
+    map<long, long>::iterator it;
+    for (it = res.begin(); it != res.end(); ++it)
+        std::cout << it->first << " => " << it->second << '\n';
+    if(bt.get(16, r)) {
+        cout << r << endl;
+    }
 }

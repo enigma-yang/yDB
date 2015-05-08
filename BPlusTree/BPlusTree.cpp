@@ -14,7 +14,7 @@ int BPlusTree::innerNode::getLower(int k)
     return hi;
 }
 
-void BPlusTree::innerNode::insert(int k, Node *p)
+void BPlusTree::innerNode::insert(long k, Node *p)
 {
     int i = 0;
     for (i = keyNum-1; i >= 0 && key[i] > k; i--) {
@@ -26,7 +26,7 @@ void BPlusTree::innerNode::insert(int k, Node *p)
     keyNum++;
 }
 
-int BPlusTree::innerNode::split(Node*  newNode, int k)
+int BPlusTree::innerNode::split(Node*  newNode, long k)
 {
     if (k > key[minKeyNum] && k < key[minKeyNum+1]) {
         for (int i = 0; i < minKeyNum; i++) {
@@ -38,7 +38,7 @@ int BPlusTree::innerNode::split(Node*  newNode, int k)
         return k;
     }
     else {
-        int retkey = 0;
+        long retkey = 0;
         if (k > key[minKeyNum + 1]) {
             retkey = key[minKeyNum + 1];
             for (int i = 0; i < minKeyNum - 1; i++) {
@@ -81,7 +81,7 @@ int BPlusTree::leafNode::getLower(int k)
     return hi;
 }
 
-void BPlusTree::leafNode::insert(int k, void* v)
+void BPlusTree::leafNode::insert(long k, long v)
 {
     int i = 0;
     for (i = keyNum-1; i >= 0 && key[i] > k; i--) {
@@ -113,7 +113,7 @@ int BPlusTree::leafNode::split(leafNode* newNode)
 }
 
 
-bool BPlusTree::get(Node* node, int key, void* v)
+bool BPlusTree::get(Node* node, long key, long & v)
 {
     if (node == NULL) return false;
 
@@ -132,15 +132,19 @@ bool BPlusTree::get(Node* node, int key, void* v)
     return false;
 }
 
-bool BPlusTree::get(int key, void* result)
+bool BPlusTree::get(long key, long& result)
 {
-    return get(root, key, result);
+    bool b = false;
+    RTM_EXEC(lock,
+        b = get(root, key, result);
+    )
+    return b;
 }
 
-void BPlusTree::insertNode(Node* node, int key, void* v, Node *p, stack<Node*>* parent)
+void BPlusTree::insertNode(Node* node, long key, long v, Node *p, stack<Node*>* parent)
 {
     Node* newNode;
-    int newKey;
+    long newKey;
     if (node->keyNum < maxKeyNum) {
         if (node->isLeaf) ((leafNode*)node)->insert(key, v);
         else ((innerNode *)node)->insert(key, p);
@@ -186,14 +190,14 @@ void BPlusTree::insertNode(Node* node, int key, void* v, Node *p, stack<Node*>* 
     }
 }
 
-void BPlusTree::put(int key, void* value)
+bool BPlusTree::put(long key, long value, bool f)
 {
     stack<Node *> parent;
     Node *n = root;
     if (root == NULL) {
         root = new leafNode();
         insertNode(root , key, value, NULL , &parent);
-        return;
+        return true;
     }
 
     while (n->isLeaf == false) {
@@ -210,13 +214,21 @@ void BPlusTree::put(int key, void* value)
     if (leaf->key[slot] == key) leaf->value[slot] = value;
     else insertNode(leaf , key, value, NULL , &parent);
 
+    return true;
 }
 
-map<int, void*> BPlusTree::getrange(int key1, int key2)
+void BPlusTree::put(long key, long value)
+{
+    RTM_EXEC(lock,
+        put(key, value, true);
+    )
+}
+
+map<long, long> BPlusTree::getrange(long key1, long key2)
 {
     Node *n = root;
     int i = 0;
-    map<int, void*> res;
+    map<long, long> res;
     if (root == NULL) return res;
     while (n->isLeaf == false) {
         innerNode *inner = (innerNode*) n;
