@@ -74,22 +74,22 @@ int YCSBWorker::txnRemove(long k) {
 void YCSBWorker::worker() {
 	startBarrier->countDown();
 	startBarrier->waitFor();
-	int op;
+	unsigned long op;
 	long k, v;
 	while (running) {
-		op = rand() % 5;
-		switch (op) {
+		op = rdtsc();
+		switch ((op+id)%5) {
 		case 0:
 		case 1:
 		case 2:
 		case 3:
 			// read txn
-			k = rand() % MAXKEY;
+			k = (op+1000000*id)%MAXKEY;
 			txnRead(k);
 			break;
 		case 4:
-			k = rand() % MAXKEY;
-			v = rand() % MAXKEY;
+			k = (op+1000000*id)%MAXKEY;
+			v = (op+1000000*id)%MAXKEY;
 			txnUpdate(k, v);
 			break;
 		}
