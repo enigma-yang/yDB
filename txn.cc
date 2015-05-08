@@ -5,10 +5,9 @@ Lock* Txn::lock = new Lock();
 
 Txn::Txn(YDb *db) {
 	this->db = db;
-	this->abortCnt = 0;
 }
 
-bool Txn::commit() {
+bool Txn::commit(Stat *stat) {
 	bool lockedByMe = false;
 	int numAbort = 0;
 RTM_EXEC2(lock, lockedByMe, numAbort,
@@ -37,19 +36,20 @@ RTM_EXEC2(lock, lockedByMe, numAbort,
 		it->first->ver++;
 	}
 )
+	stat->numRTMTxn += 1;
+	stat->numRTMAbortTxn += numAbort;
 
-	this->abortCnt += numAbort;
 	return true;
 }
 
 /* FIXME assuem key exists */
-void Txn::read(long k, char *buf, int size) {
+void Txn::read(long k, char *buf, int size, Stat* stat) {
 	void *vp;
 	if (writeSet.find(k) != writeSet.end()) {
 		vp = writeValueSet[writeSet[k]];
 	} else {
 		int ver;
-		Record *rp = db->get(k);
+		Record *rp = db->get(k, stat);
 		int numAbort = 0;
 
 		
@@ -63,7 +63,7 @@ void Txn::read(long k, char *buf, int size) {
 	}
 }
 
-void Txn::write(long k, char *buf, int size) {
+void Txn::write(long k, char *buf, int size, Stat* stat) {
 	char *value = new char[size];
 	for (int i = 0; i < size; i++)
 		value[i] = buf[i];
@@ -72,7 +72,7 @@ void Txn::write(long k, char *buf, int size) {
 	if (writeSet.find(k) != writeSet.end())
 		rp = writeSet[k];
 	else
-		rp = db->get(k);
+		rp = db->get(k, stat);
 	writeValueSet[rp] = value;
 }
 
@@ -80,5 +80,4 @@ void Txn::reuse() {
 	readSet.clear();
 	writeSet.clear();
 	writeValueSet.clear();
-	abortCnt = 0;
 }

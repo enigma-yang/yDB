@@ -18,7 +18,7 @@ private:
 	BPlusTree bptree;
 public:
 	void put(long k, Record* v);
-	Record* get(long k);
+	Record* get(long k, Stat *stat);
 	void remove(long k);
 	Txn* newTxn();
 };
@@ -27,16 +27,15 @@ public:
 class Txn {
 public:
 	static Lock *lock;
-	int abortCnt;
 
 	Txn(YDb *db);
 
 	/* in-transaction operation */
-	void read(long k, char *buf, int size);
-	void write(long k, char *buf, int size);
+	void read(long k, char *buf, int size, Stat* stat);
+	void write(long k, char *buf, int size, Stat* stat);
 
 	/* commit a transaction, return whether it succeeds */
-	bool commit();
+	bool commit(Stat* stat);
 	
 	/* restart a transaction */
 	void reuse();

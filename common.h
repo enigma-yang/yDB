@@ -4,6 +4,7 @@
 #include <assert.h>
 
 #include "rtm.h"
+#include "stat.h"
 
 /* FIXME int type is only used for experiment */
 

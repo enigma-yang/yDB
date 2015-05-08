@@ -135,12 +135,15 @@ void* BPlusTree::get(Node* node, long key)
     return NULL;
 }
 
-void* BPlusTree::get(long key)
+void* BPlusTree::get(long key, Stat* stat)
 {
     void* ptr = NULL;
-    RTM_EXEC(lock,
+	int numAbort = 0;
+    RTM_EXEC3(lock, numAbort,
         ptr = get(root, key);
     )
+	stat->numRTMAbortTree += numAbort;
+	stat->numRTMTree++;
     return ptr;
 }
 

@@ -15,11 +15,8 @@ private:
 
 class YCSBWorker {
 public:
-	unsigned long numCommit;
-	unsigned long numAbort;
-	unsigned long numRTM;
-	unsigned long numRTMAbort;
 	std::thread* thread;
+	Stat stat;
 
 	YCSBWorker(SpinBarrier *startBarrier, YDb *db, int id);
 	void txnCreate(long k, long v);

@@ -6,8 +6,8 @@ void YDb::put(long k, Record* v) {
 	bptree.put(k, v);
 }
 
-Record* YDb::get(long k) {
-	void *v = bptree.get(k);
+Record* YDb::get(long k, Stat *stat) {
+	void *v = bptree.get(k, stat);
 	return (Record *)v;
 }
 

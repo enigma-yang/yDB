@@ -6,15 +6,14 @@
 #include <map>
 #include <string>
 
-#include "lock.h"
-#include "rtm.h"
+#include "common.h"
 
 using namespace std;
 
 class BPlusTree
 {
 private:
-    static const int minimumDegree = 15;
+    static const int minimumDegree = 16;
     static const int minKeyNum = minimumDegree - 1;
     static const int maxKeyNum = 2 * minimumDegree - 1;
     static const int minChildNum = minimumDegree;
@@ -77,7 +76,7 @@ public:
 		lock = new Lock();
     }
 
-    void* get(long key);
+    void* get(long key, Stat* stat);
     void put(long key, void* value);
     map<long, void*> getrange(long key1, long key2);
 };

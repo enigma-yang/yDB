@@ -21,10 +21,6 @@ bool running;
 YCSBWorker::YCSBWorker(SpinBarrier* startBarrier, YDb* db, int id) {
 	this->startBarrier= startBarrier;
 	this->db = db;
-	this->numCommit = 0;
-	this->numAbort = 0;
-	this->numRTM = 0;
-	this->numRTMAbort = 0;
 	this->id = id;
 	this->thread = new std::thread(&YCSBWorker::worker, this);
 	this->readTxn = db->newTxn();
@@ -48,32 +44,26 @@ void YCSBWorker::txnRead(long k) {
 	txn->reuse();
 
 	long v;
-	txn->read(k, (char *)&v, sizeof(v));
+	txn->read(k, (char *)&v, sizeof(v), &stat);
 
-	if (txn->commit() == true) {
-		numCommit++;
+	if (txn->commit(&stat) == true) {
+		stat.numCommit++;
 	} else {
-		numAbort++;
+		stat.numAbort++;
 	}
-
-	numRTM += 2;
-	numRTMAbort += txn->abortCnt;
 }
 
 void YCSBWorker::txnUpdate(long k, long v) {
 	Txn* txn = updateTxn;
 	txn->reuse();
 
-	txn->write(k, (char *)&v, sizeof(v));
+	txn->write(k, (char *)&v, sizeof(v), &stat);
 
-	if (txn->commit() == true) {
-		numCommit++;
+	if (txn->commit(&stat) == true) {
+		stat.numCommit++;
 	} else {
-		numAbort++;
+		stat.numAbort++;
 	}
-
-	numRTM += 1;
-	numRTMAbort += txn->abortCnt;
 }
 
 // TODO to be implemented
@@ -141,22 +131,23 @@ int main(int argc, char **argv) {
 	running = false;
 
 	/* collect stats */
-	unsigned long numCommit = 0;
-	unsigned long numAbort = 0;
-	unsigned long numRTM = 0;
-	unsigned long numRTMAbort = 0;
+	Stat stat;
 	for(std::vector<YCSBWorker*>::iterator it = workers.begin(); it != workers.end(); ++it) {
 		(*it)->thread->join();
-		numCommit += (*it)->numCommit;
-		numAbort += (*it)->numAbort;
-		numRTM += (*it)->numRTM;
-		numRTMAbort += (*it)->numRTMAbort;
+		stat.numCommit += (*it)->stat.numCommit;
+		stat.numAbort += (*it)->stat.numAbort;
+		stat.numRTMTxn += (*it)->stat.numRTMTxn;
+		stat.numRTMAbortTxn += (*it)->stat.numRTMAbortTxn;
+		stat.numRTMTree += (*it)->stat.numRTMTree;
+		stat.numRTMAbortTree += (*it)->stat.numRTMAbortTree;
 	}
 
-	std::cout << "ops :" << numCommit * 1.0 / numSecs << std::endl;
-	std::cout << "aps :" << numAbort * 1.0 / numSecs << std::endl;
-	std::cout << "rtm :" << numRTM << std::endl;
-	std::cout << "rtmAbort :" << numRTMAbort << std::endl;
+	std::cout << "ops :" << stat.numCommit * 1.0 / numSecs << std::endl;
+	std::cout << "aps :" << stat.numAbort * 1.0 / numSecs << std::endl;
+	std::cout << "rtmTxn:" << stat.numRTMTxn << std::endl;
+	std::cout << "rtmAbortTxn :" << stat.numRTMAbortTxn << std::endl;
+	std::cout << "rtmTree :" << stat.numRTMTree << std::endl;
+	std::cout << "rtmAbortTree :" << stat.numRTMAbortTree << std::endl;
 
 	return 0;
 }
