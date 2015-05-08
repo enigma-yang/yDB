@@ -4,6 +4,10 @@ Team memeber: Zhiyuan Yang, Zhizhou Yang
 ###SUMMARY
 We are going to use Intel RTM to implement a prototype of in-memory database that is high-performance and scalable on multicore machine.
 
+###Result
+
+![alt tag](https://raw.github.com/Zhiyuan-Yang/yDB/occ/chart1.png)
+![alt tag](https://raw.github.com/Zhiyuan-Yang/yDB/occ/chart2.png)
 
 ###BACKGROUND
 Traditionally, databases use fine-grained locks and atomic operations to do synchronization. While it can provide good performance and reasonable scalability, the resulting code is very complex to reason and it is difficult to make sure the correctness on different memory models of processors. 
