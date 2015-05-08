@@ -1,21 +1,2 @@
-APP := BPlusTree
-CC := g++
-
-SRC := BPlusTree.cpp main.cpp
-
-OBJ := $(SRC:.cpp=.o)
-
-all: depend $(APP)
-.PHONY: all
-
-depend: $(SRC)
-	$(CC) $(SRC) > .depend
-
--include .depend
-
-$(APP): $(OBJ)
-	$(CC) -o $@ $^ -lpthread
-
-.PHONY: clean
-clean:
-	rm -f *.o $(APP) *~ .depend
+all:
+	g++ -std=c++11 main.cpp BPlusTree.cpp -lpthread
