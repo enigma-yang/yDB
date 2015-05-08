@@ -31,8 +31,8 @@ RTM_EXEC2(lock, lockedByMe, numAbort,
 
 	// write phase
 	for (std::map<Record*, char*>::iterator it = writeValueSet.begin(); it != writeValueSet.end(); it++) {
-		// FIXME delete may be bottleneck
-		delete it->first->value;
+		// FIXME memory leak, but delete would be inefficient
+		//delete it->first->value;
 		it->first->value = it->second;
 		it->first->ver++;
 	}
