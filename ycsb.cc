@@ -14,14 +14,22 @@
 #include "spinbarrier.h"
 
 
-#define MAXKEY 10000000
+#define MAXKEY 12345678
 
 bool running;
+int g_seed;
+
+inline int fastrand() {
+	g_seed = (214013 * g_seed + 2531011);
+	//cout << g_seed << endl;
+	return (g_seed>>16)&0x7FFF; 
+}
 
 YCSBWorker::YCSBWorker(SpinBarrier* startBarrier, YDb* db, int id) {
 	this->startBarrier= startBarrier;
 	this->db = db;
 	this->id = id;
+	g_seed = id;
 	this->thread = new std::thread(&YCSBWorker::worker, this);
 	this->readTxn = db->newTxn();
 	this->updateTxn = db->newTxn();
@@ -77,7 +85,7 @@ void YCSBWorker::worker() {
 	unsigned long op;
 	long k, v;
 	while (running) {
-		op = rdtsc();
+		op = fastrand();
 		switch ((op+id)%5) {
 		case 0:
 		case 1:
