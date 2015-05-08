@@ -1,4 +1,2 @@
 all:
-	g++ -std=c++11  ydb.cc txn.cc ycsb.cc -o ycsb -lpthread
-clean:
-	rm ycsb
+	g++ -std=c++11 main.cpp BPlusTree.cpp -lpthread
