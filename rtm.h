@@ -57,6 +57,7 @@ static __rtm_force_inline int _xtest(void)
 	return out;
 }
 
+
 #define RTM_EXEC(lock, code_block) { \
 	if (_xbegin() == _XBEGIN_STARTED) { \
 		if (lock->isLocked()) { \
@@ -72,7 +73,8 @@ static __rtm_force_inline int _xtest(void)
 	} \
 }
 
-#define RTM_EXEC2(lock, lockedByMe, code_block) { \
+#define RTM_EXEC2(lock, lockedByMe, numAbort, code_block) { \
+RETRY: \
 	if (_xbegin() == _XBEGIN_STARTED) { \
 		if (lock->isLocked()) { \
 			_xabort(1); \
@@ -81,7 +83,25 @@ static __rtm_force_inline int _xtest(void)
 		} \
 		_xend(); \
 	} else { \
+		if (++numAbort < 2) goto RETRY; \
 		lockedByMe = true; \
+		lock->lock(); \
+		code_block \
+		lock->unlock(); \
+	} \
+}
+
+#define RTM_EXEC3(lock, numAbort, code_block) { \
+RETRY: \
+	if (_xbegin() == _XBEGIN_STARTED) { \
+		if (lock->isLocked()) { \
+			_xabort(1); \
+		} else { \
+			code_block \
+		} \
+		_xend(); \
+	} else { \
+		if (++numAbort < 2) goto RETRY; \
 		lock->lock(); \
 		code_block \
 		lock->unlock(); \

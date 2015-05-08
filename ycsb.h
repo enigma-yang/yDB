@@ -17,6 +17,8 @@ class YCSBWorker {
 public:
 	int numCommit;
 	int numAbort;
+	int numRTM;
+	int numRTMAbort;
 	std::thread* thread;
 
 	YCSBWorker(SpinBarrier *startBarrier, YDb *db, int id);

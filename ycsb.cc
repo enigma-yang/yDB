@@ -23,6 +23,8 @@ YCSBWorker::YCSBWorker(SpinBarrier* startBarrier, YDb* db, int id) {
 	this->db = db;
 	this->numCommit = 0;
 	this->numAbort = 0;
+	this->numRTM = 0;
+	this->numRTMAbort = 0;
 	this->id = id;
 	this->thread = new std::thread(&YCSBWorker::worker, this);
 
@@ -52,6 +54,8 @@ void YCSBWorker::txnRead(long k) {
 		numAbort++;
 	}
 
+	numRTM += 2;
+	numRTMAbort += txn->abortCnt;
 	delete txn;
 }
 
@@ -66,6 +70,8 @@ void YCSBWorker::txnUpdate(long k, long v) {
 		numAbort++;
 	}
 
+	numRTM += 1;
+	numRTMAbort += txn->abortCnt;
 	delete txn;
 }
 
@@ -80,14 +86,17 @@ void YCSBWorker::worker() {
 	int op;
 	long k, v;
 	while (running) {
-		op = rand() % 2;
+		op = rand() % 5;
 		switch (op) {
 		case 0:
+		case 1:
+		case 2:
+		case 3:
 			// read txn
 			k = rand() % MAXKEY;
 			txnRead(k);
 			break;
-		case 1:
+		case 4:
 			k = rand() % MAXKEY;
 			v = rand() % MAXKEY;
 			txnUpdate(k, v);
@@ -133,13 +142,20 @@ int main(int argc, char **argv) {
 	/* collect stats */
 	int numCommit = 0;
 	int numAbort = 0;
+	int numRTM = 0;
+	int numRTMAbort = 0;
 	for(std::vector<YCSBWorker*>::iterator it = workers.begin(); it != workers.end(); ++it) {
+		(*it)->thread->join();
 		numCommit += (*it)->numCommit;
 		numAbort += (*it)->numAbort;
+		numRTM += (*it)->numRTM;
+		numRTMAbort += (*it)->numRTMAbort;
 	}
 
 	std::cout << "ops :" << numCommit * 1.0 / numSecs << std::endl;
 	std::cout << "aps :" << numAbort * 1.0 / numSecs << std::endl;
+	std::cout << "rtm :" << numRTM << std::endl;
+	std::cout << "rtmAbort :" << numRTMAbort << std::endl;
 
 	return 0;
 }

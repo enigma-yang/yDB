@@ -5,19 +5,13 @@ Lock* Txn::lock = new Lock();
 
 Txn::Txn(YDb *db) {
 	this->db = db;
+	this->abortCnt = 0;
 }
 
 bool Txn::commit() {
-	//int ver_debug;
-	//long wt_debug;
-	//for (std::map<Record*, int>::iterator it = readSet.begin(); it != readSet.end(); it++)
-		//ver_debug = it->second;
-//	writeValueSet[writeSet[(long)1]];
-	//wt_debug = *(long *)(writeValueSet[writeSet[(long)1]]);
-	//assert(ver_debug + 2 == wt_debug);
-		
 	bool lockedByMe = false;
-RTM_EXEC2(lock, lockedByMe,
+	int numAbort = 0;
+RTM_EXEC2(lock, lockedByMe, numAbort,
 	// validate phase
 	for (std::map<Record*, int>::iterator it = readSet.begin(); it != readSet.end(); it++) {
 		if (it->first->ver != it->second) {
@@ -43,6 +37,7 @@ RTM_EXEC2(lock, lockedByMe,
 	}
 )
 
+	this->abortCnt += numAbort;
 	return true;
 }
 
@@ -54,8 +49,10 @@ void Txn::read(long k, char *buf, int size) {
 	} else {
 		int ver;
 		Record *rp = db->get(k);
+		int numAbort = 0;
 
-		RTM_EXEC(lock,
+		
+		RTM_EXEC3(lock, numAbort,
 				ver = rp->ver;
 				char *value = rp->value;
 				for (int i = 0; i < size; i++)

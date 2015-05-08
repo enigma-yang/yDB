@@ -27,6 +27,7 @@ public:
 class Txn {
 public:
 	static Lock *lock;
+	int abortCnt;
 
 	Txn(YDb *db);
 
