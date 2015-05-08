@@ -113,7 +113,7 @@ int BPlusTree::leafNode::split(leafNode* newNode)
     return newNode->key[0];
 }
 
-
+/*
 void* BPlusTree::get(Node* node, long key)
 {
     void* v = NULL;
@@ -133,6 +133,25 @@ void* BPlusTree::get(Node* node, long key)
     }
 
     return NULL;
+}
+*/
+
+void* BPlusTree::get(Node* node, long key)
+{
+    void* v = NULL;
+    while (node != NULL) {
+        if (node->isLeaf) {
+            int slot = node->getLower(key) - 1;
+            if (((leafNode*)node)->key[slot] == key) {
+                v = ((leafNode*)node)->value[slot];
+            }
+            return v;
+        } else {
+            int slot = node->getLower(key);
+            node = ((innerNode*)node)->child[slot];
+        }
+    }
+    return v;
 }
 
 void* BPlusTree::get(long key, Stat* stat)
@@ -196,7 +215,7 @@ void BPlusTree::insertNode(Node* node, long key, void* v, Node *p, stack<Node*>*
     }
 }
 
-void BPlusTree::put(long key, void* value, bool f)
+void BPlusTree::putNode(long key, void* value)
 {
     stack<Node *> parent;
     Node *n = root;
@@ -225,7 +244,7 @@ void BPlusTree::put(long key, void* value, bool f)
 void BPlusTree::put(long key, void* value)
 {
     RTM_EXEC(lock,
-        put(key, value, true);
+        putNode(key, value);
     )
 }
 

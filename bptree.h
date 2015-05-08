@@ -67,7 +67,7 @@ private:
 private:
     void* get(Node* node, long key);
     void insertNode(Node* node, long key, void* value, Node* p, stack<Node *>* parent);
-    void put(long key, void* value, bool f);
+    void putNode(long key, void* value);
 
 public:
     BPlusTree() {
