@@ -7,6 +7,10 @@ Txn::Txn(YDb *db) {
 	this->db = db;
 }
 
+void Txn::begin_readonly() {
+	lsn = atomic_increment_and_return(&(db->S));
+}
+
 bool Txn::commit(Stat *stat) {
 	bool lockedByMe = false;
 	int numAbort = 0;
@@ -30,8 +34,15 @@ RTM_EXEC2(lock, lockedByMe, numAbort,
 
 	// write phase
 	for (std::map<Record*, char*>::iterator it = writeValueSet.begin(); it != writeValueSet.end(); it++) {
-		// FIXME memory leak, but delete would be inefficient
-		//delete it->first->value;
+		// FIXME when to delete
+		if (it->first->lsn != db->S) {
+			Version *oldVersion = new Version();
+			oldVersion->lsn = it->first->lsn;
+			oldVersion->value = it->first->value;
+			oldVersion->next = it->first->oldVersions;
+			it->first->oldVersions = oldVersion;
+			it->first->lsn = db->S;
+		}
 		it->first->value = it->second;
 		it->first->ver++;
 	}
@@ -61,6 +72,25 @@ void Txn::read(long k, char *buf, int size, Stat* stat) {
 		);
 		readSet[rp] = ver;
 	}
+}
+
+void Txn::readonly(long k, char *buf, int size, Stat* stat) {
+	Record *rp = db->get(k, stat);
+	char *value;
+	if (rp->lsn == lsn) {
+		value = rp->value;
+	} else {
+		Version* oldVersion = rp->oldVersions;
+		while (oldVersion != NULL) {
+			if (oldVersion->lsn <= lsn) {
+				value = oldVersion->value;
+				break;
+			}
+			oldVersion = oldVersion->next;
+		}
+	}
+	for (int i = 0; i < size; i++)
+		buf[i] = value[i];
 }
 
 void Txn::write(long k, char *buf, int size, Stat* stat) {

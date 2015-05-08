@@ -41,16 +41,12 @@ void YCSBWorker::txnCreate(long k, long v) {
 
 void YCSBWorker::txnRead(long k) {
 	Txn* txn = readTxn;
-	txn->reuse();
+	txn->begin_readonly();
 
 	long v;
-	txn->read(k, (char *)&v, sizeof(v), &stat);
+	txn->readonly(k, (char *)&v, sizeof(v), &stat);
 
-	if (txn->commit(&stat) == true) {
-		stat.numCommit++;
-	} else {
-		stat.numAbort++;
-	}
+	stat.numCommit++;
 }
 
 void YCSBWorker::txnUpdate(long k, long v) {
@@ -102,6 +98,8 @@ void YCSBLoader::load() {
 		Record *r = new Record();
 		r->value = new char[sizeof(long)];
 		r->ver = 0;
+		r->lsn = 1;
+		r->oldVersions = NULL;
 		db->put(i, r);
 	}
 }

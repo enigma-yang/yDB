@@ -160,9 +160,9 @@ void* BPlusTree::get(long key, Stat* stat)
 {
     void* ptr = NULL;
 	int numAbort = 0;
-    RTM_EXEC3(lock, numAbort,
-        ptr = get(root, key);
-    )
+	//RTM_EXEC3(lock, numAbort,
+		ptr = get(root, key);
+	//)
 	stat->numRTMAbortTree += numAbort;
 	stat->numRTMTree++;
     return ptr;

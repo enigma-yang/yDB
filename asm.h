@@ -17,4 +17,14 @@ rdtsc(void)
   return ((uint64_t)lo)|(((uint64_t)hi)<<32);
 }
 
+
+inline unsigned long atomic_increment_and_return(volatile unsigned long * obj) {
+	unsigned long i = 1;
+	asm volatile("lock; xadd %0, %1"
+			: "+r" (i), "+m" (*obj)
+			: : "memory");
+	return i;
+}
+
+
 #endif /* _AMD64_H_ */
