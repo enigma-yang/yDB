@@ -5,11 +5,13 @@ Team memeber: Zhiyuan Yang, Zhizhou Yang
 We are going to use Intel RTM to implement a prototype of in-memory database that is high-performance and scalable on multicore machine.
 
 ###Result
-<a href="url"><img src="https://raw.githubusercontent.com/Zhiyuan-Yang/yDB/occ/chart1.png?token=AHtqN19LmOKlJB_kHZFtf-f_PU2MjjUWks5VVoPwwA%3D%3D" align="left" height="331" width="480" ></a>
-
 The first figure shows the throughput of spin-lock and Silo performance using B+ tree on multi-threads. There is no scalability for the spin-lock-based realization. For Silo, there is about 5M operations per second throughput on 4 threads.
 
+<a href="url"><img src="https://raw.githubusercontent.com/Zhiyuan-Yang/yDB/occ/chart1.png?token=AHtqN19LmOKlJB_kHZFtf-f_PU2MjjUWks5VVoPwwA%3D%3D" align="left" height="331" width="480" ></a>
+
 The second figure shows the throughput performance of our yDB implementation based on RTM. The is also a chart showing the detailed throughput of our database transactions on different number of threads. From the figure, it can be implied that we accessed a similar throughput level as Silo.
+
+![chart2](https://raw.githubusercontent.com/Zhiyuan-Yang/yDB/occ/chart2.png?token=AHtqN77Ok8P7OSXOdewGzm4Wf7Q1Vq42ks5VVoQLwA%3D%3D)
 
 Number of Threads | Throughput (ops/sec)
 ------------ | -------------
@@ -17,8 +19,6 @@ Number of Threads | Throughput (ops/sec)
 2	| 2.76E+06
 3	| 3.88E+06
 4	| 4.85E+06
-
-![chart2](https://raw.githubusercontent.com/Zhiyuan-Yang/yDB/occ/chart2.png?token=AHtqN77Ok8P7OSXOdewGzm4Wf7Q1Vq42ks5VVoQLwA%3D%3D)
 
 ###BACKGROUND
 Traditionally, databases use fine-grained locks and atomic operations to do synchronization. While it can provide good performance and reasonable scalability, the resulting code is very complex to reason and it is difficult to make sure the correctness on different memory models of processors. 
