@@ -1,4 +1,5 @@
-#include "BPlusTree.h"
+#include "bptree.h"
+
 
 int BPlusTree::innerNode::getLower(int k)
 {
@@ -123,7 +124,6 @@ void* BPlusTree::get(Node* node, long key)
         int slot = node->getLower(key) - 1;
         if (((leafNode*)node)->key[slot] == key) {
             v = ((leafNode*)node)->value[slot];
-            cout << v << endl;
             return v;
         }
     }

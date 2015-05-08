@@ -5,6 +5,7 @@
 #define YDB_H
 
 #include "common.h"
+#include "bptree.h"
 #include <map>
 
 
@@ -14,12 +15,11 @@ class YDb;
 class YDb {
 	friend class YCSBLoader;
 private:
-	// FIXME use RTM-based B-tree 
+	BPlusTree bptree;
 public:
 	void put(long k, Record* v);
 	Record* get(long k);
 	void remove(long k);
-	// FIXME don't know whether returning object affects performance
 	Txn* newTxn();
 };
 

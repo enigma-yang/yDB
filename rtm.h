@@ -72,4 +72,19 @@ static __rtm_force_inline int _xtest(void)
 	} \
 }
 
+#define RTM_EXEC2(lock, lockedByMe, code_block) { \
+	if (_xbegin() == _XBEGIN_STARTED) { \
+		if (lock->isLocked()) { \
+			_xabort(1); \
+		} else { \
+			code_block \
+		} \
+		_xend(); \
+	} else { \
+		lockedByMe = true; \
+		lock->lock(); \
+		code_block \
+		lock->unlock(); \
+	} \
+}
 #endif

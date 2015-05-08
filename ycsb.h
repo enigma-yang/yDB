@@ -17,6 +17,7 @@ class YCSBWorker {
 public:
 	int numCommit;
 	int numAbort;
+	std::thread *thread;
 
 	YCSBWorker(SpinBarrier *startBarrier, YDb *db);
 	void txnCreate(long k, long v);
@@ -28,7 +29,6 @@ public:
 private:
 	SpinBarrier *startBarrier;
 	YDb *db;
-	std::thread *thread;
 };
 
 #endif /* YCSB_H */

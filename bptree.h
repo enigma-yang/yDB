@@ -5,8 +5,8 @@
 #include <stack>
 #include <map>
 #include <string>
-#include <semaphore.h>
 
+#include "lock.h"
 #include "rtm.h"
 
 using namespace std;
@@ -14,7 +14,7 @@ using namespace std;
 class BPlusTree
 {
 private:
-    static const int minimumDegree = 2;
+    static const int minimumDegree = 15;
     static const int minKeyNum = minimumDegree - 1;
     static const int maxKeyNum = 2 * minimumDegree - 1;
     static const int minChildNum = minimumDegree;
@@ -63,7 +63,7 @@ private:
 private:
     Node *root;
     leafNode* leftHead;
-    sem_t lock;
+    Lock *lock;
 
 private:
     void* get(Node* node, long key);
@@ -74,7 +74,7 @@ public:
     BPlusTree() {
         root = NULL;
         leftHead = NULL;
-        sem_init(&lock, 0, 1);
+		lock = new Lock();
     }
 
     void* get(long key);

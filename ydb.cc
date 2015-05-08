@@ -3,11 +3,12 @@
 #include "ydb.h"
 
 void YDb::put(long k, Record* v) {
-	// TODO
+	bptree.put(k, v);
 }
 
 Record* YDb::get(long k) {
-	// TODO
+	void *v = bptree.get(k);
+	return (Record *)v;
 }
 
 void YDb::remove(long k) {

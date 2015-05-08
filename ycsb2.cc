@@ -1,5 +1,5 @@
 /**
- * ycsb benchmark
+ * ycsb benchmark: debug correctness
  */
 #include <iostream>
 #include <pthread.h>
@@ -14,16 +14,14 @@
 #include "spinbarrier.h"
 
 
-#define MAXKEY 10000000
-
 volatile bool running;
 
 YCSBWorker::YCSBWorker(SpinBarrier* startBarrier, YDb* db) {
 	this->startBarrier= startBarrier;
 	this->db = db;
+	this->thread = new std::thread(&YCSBWorker::worker, this);
 	this->numCommit = 0;
 	this->numAbort = 0;
-	this->thread = new std::thread(&YCSBWorker::worker, this);
 }
 
 
@@ -40,7 +38,9 @@ void YCSBWorker::txnRead(long k) {
 
 	if (txn->commit() == true) {
 		numCommit++;
+		assert(v == k);
 	} else {
+		assert(false);
 		numAbort++;
 	}
 
@@ -56,6 +56,7 @@ void YCSBWorker::txnUpdate(long k, long v) {
 		numCommit++;
 	} else {
 		numAbort++;
+		assert(false);
 	}
 
 	delete txn;
@@ -70,46 +71,42 @@ void YCSBWorker::worker() {
 	startBarrier->countDown();
 	startBarrier->waitFor();
 	int op;
-	long k, v;
-	while (running) {
-		op = rand() % 2;
-		switch (op) {
-		case 0:
-			// read txn
-			k = rand() % MAXKEY;
-			txnRead(k);
-			break;
-		case 1:
-			k = rand() % MAXKEY;
-			v = rand() % MAXKEY;
-			txnUpdate(k, v);
-			break;
-		}
+	long k=1, v;
+	//while (running) {
+	for (int i = 0; i < 100000; ) {
+		Txn *txn;
+		txn = db->newTxn();
+		txn->read(k, (char *)&v, sizeof(v));
+		v++;
+		txn->write(k, (char *)&v, sizeof(v));
+		if (txn->commit())
+			i++;
+		delete txn;
 	}
+//	}
 }
 
 void YCSBLoader::load() {
 	// FIXME experiment simple workload
-	for (int i = 0; i < MAXKEY; i++) {
-		Record *r = new Record();
-		r->value = new char[sizeof(long)];
-		r->ver = 0;
-		db->put(i, r);
-	}
+	Record *r = new Record();
+	r->value = new char[sizeof(long)];
+	*(long *)(r->value) = (long)1;
+	r->ver = 1;
+	db->put(1, r);
 }
 
 
 int main(int argc, char **argv) {
 	YDb ydb;
 	int nthreads = 4;
-	int numSecs = 10;
+	int numSecs = 60;
 	
 	/* load data */
 	YCSBLoader loader(&ydb);
 	loader.load();
 
 	/* create workers, run workload */
-	running = true;
+	//running = true;
 	SpinBarrier startBarrier(nthreads+1);
 	std::vector<YCSBWorker*> workers;
 	for (int i = 0; i < nthreads; i++) {
@@ -118,16 +115,17 @@ int main(int argc, char **argv) {
 	}
 	// let's go!
 	startBarrier.countDown();
-	sleep(numSecs);
-	running = false;
+	//sleep(numSecs);
+	//running = false;
 
-	/* collect stats */
-	int numTxn = 0;
-	for(std::vector<YCSBWorker*>::iterator it = workers.begin(); it != workers.end(); ++it) {
-		numTxn += (*it)->numCommit;
-	}
-
-	std::cout << "tps :" << numTxn * 1.0 / numSecs;
+	for(std::vector<YCSBWorker*>::iterator it = workers.begin(); it != workers.end(); ++it)
+		(*it)->thread->join();
+		
+	Txn* txn = ydb.newTxn();
+	long v;
+	txn->read(1, (char *)&v, sizeof(v));
+	txn->commit();
+	std::cout << v << std::endl;
 
 	return 0;
 }
