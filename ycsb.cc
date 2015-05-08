@@ -88,6 +88,7 @@ void YCSBWorker::worker() {
 			txnRead(k);
 			break;
 		case 4:
+		default:
 			k = (op+1000000*id)%MAXKEY;
 			v = (op+1000000*id)%MAXKEY;
 			txnUpdate(k, v);

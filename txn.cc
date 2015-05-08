@@ -12,7 +12,7 @@ bool Txn::commit(Stat *stat) {
 	int numAbort = 0;
 RTM_EXEC2(lock, lockedByMe, numAbort,
 	// validate phase
-	for (std::map<Record*, int>::iterator it = readSet.begin(); it != readSet.end(); it++) {
+	for (std::unordered_map<Record*, int>::iterator it = readSet.begin(); it != readSet.end(); it++) {
 		if (it->first->ver != it->second) {
 			if (lockedByMe)
 				lock->unlock();
@@ -20,7 +20,7 @@ RTM_EXEC2(lock, lockedByMe, numAbort,
 		}
 	}
 
-	for (std::map<long, Record*>::iterator it = writeSet.begin(); it != writeSet.end(); it++) {
+	for (std::unordered_map<long, Record*>::iterator it = writeSet.begin(); it != writeSet.end(); it++) {
 		if (it->second->ver < 0) {
 			if (lockedByMe)
 				lock->unlock();
@@ -29,7 +29,7 @@ RTM_EXEC2(lock, lockedByMe, numAbort,
 	}
 
 	// write phase
-	for (std::map<Record*, char*>::iterator it = writeValueSet.begin(); it != writeValueSet.end(); it++) {
+	for (std::unordered_map<Record*, char*>::iterator it = writeValueSet.begin(); it != writeValueSet.end(); it++) {
 		// FIXME memory leak, but delete would be inefficient
 		//delete it->first->value;
 		it->first->value = it->second;

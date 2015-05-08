@@ -6,7 +6,7 @@
 
 #include "common.h"
 #include "bptree.h"
-#include <map>
+#include <unordered_map>
 
 
 class Txn;
@@ -42,11 +42,11 @@ public:
 
 private:
 	// <pointer to record, version number of record at the time of read>
-	std::map<Record*, int> readSet;
+	std::unordered_map<Record*, int> readSet;
 	// <pinter to record, new value to write>
-	std::map<long, Record*> writeSet;
+	std::unordered_map<long, Record*> writeSet;
 	// FIXME free value buffers if transaction aborts
-	std::map<Record*, char*> writeValueSet;
+	std::unordered_map<Record*, char*> writeValueSet;
 	YDb *db;
 };
 
