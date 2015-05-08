@@ -72,5 +72,4 @@ static __rtm_force_inline int _xtest(void)
 	} \
 }
 
-
 #endif
