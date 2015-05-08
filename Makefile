@@ -1,4 +1,4 @@
 all:
-	g++ -std=c++11  ydb.cc txn.cc ycsb.cc -o ycsb -lpthread
+	g++ -std=c++11  lock.cc txn.cc ydb.cc ycsb.cc -o ycsb -lpthread
 clean:
 	rm ycsb

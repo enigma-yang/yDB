@@ -3,8 +3,14 @@
 
 #include <assert.h>
 
+#include "rtm.h"
+
 /* FIXME int type is only used for experiment */
-typedef int KTYPE;
-typedef int VTYPE;
+
+struct Record {
+	char *value;
+	int ver;
+};
+
 
 #endif /* COMMON_H */

@@ -9,9 +9,8 @@
 
 #include <unistd.h>
 
-#include "txn.h"
-#include "common.h"
 #include "ydb.h"
+#include "ycsb.h"
 #include "spinbarrier.h"
 
 
@@ -19,126 +18,116 @@
 
 volatile bool running;
 
-class ycsb_worker {
-private:
-	int num_commit;
-	int num_abort;
-	spin_barrier *start_barrier;
-	YDb *db;
-	std::thread *thread;
-	
-public:
-	ycsb_worker(spin_barrier *start_barrier, YDb *db) {
-		this->start_barrier = start_barrier;
-		this->db = db;
-		this->thread = new std::thread(&ycsb_worker::worker, this);
+YCSBWorker::YCSBWorker(SpinBarrier* startBarrier, YDb* db) {
+	this->startBarrier= startBarrier;
+	this->db = db;
+	this->thread = new std::thread(&YCSBWorker::worker, this);
+}
+
+
+// TODO to be implemented
+void YCSBWorker::txnCreate(long k, long v) {
+}
+
+void YCSBWorker::txnRead(long k) {
+	// FIXME will this leak memory?
+	Txn* txn = db->newTxn();
+
+	long v;
+	txn->read(k, (char *)&v, sizeof(v));
+
+	if (txn->commit() == true) {
+		numCommit++;
+	} else {
+		assert(false);
+		numAbort++;
 	}
 
-	void count_commit() {
-		num_commit++;
+	delete txn;
+}
+
+void YCSBWorker::txnUpdate(long k, long v) {
+	Txn* txn = db->newTxn();
+
+	txn->write(k, (char *)&v, sizeof(v));
+
+	if (txn->commit() == true) {
+		numCommit++;
+	} else {
+		numAbort++;
+		assert(false);
 	}
 
-	void txn_create(KTYPE k, VTYPE v) {
-		Txn txn = db->new_txn();
-		txn.txn_begin();
+	delete txn;
+}
 
-		db->put(k, v); 
-		txn.txn_commit();
-		count_commit();
-	}
+// TODO to be implemented
+int YCSBWorker::txnRemove(long k) {
+}
 
-	VTYPE txn_read(KTYPE k) {
-		Txn txn = db->new_txn();
-		txn.txn_begin();
 
-		VTYPE retval = db->get(k);
-
-		txn.txn_commit();
-		count_commit();
-
-		return retval;
-	}
-
-	void txn_update(KTYPE k, VTYPE v) {
-		Txn txn = db->new_txn();
-		txn.txn_begin();
-
-		db->put(k, v);
-
-		txn.txn_commit();
-		count_commit();
-	}
-
-	int txn_remove(KTYPE k) {
-		Txn txn = db->new_txn();
-		txn.txn_begin();
-
-		db->remove(k);
-
-		txn.txn_commit();
-		count_commit();
-	}
-
-	int get_num_commit() {
-		return num_commit;
-	}
-
-	void worker() {
-		start_barrier->count_down();
-		start_barrier->wait_for();
-		while (running) {
-			int op = rand() % 2;
-			switch (op) {
-				case 0:
-				{
-					// read txn
-					int k = rand() % MAXKEY;
-					txn_read(k);
-					break;
-				}
-				case 1:
-				{
-					int k = rand() % MAXKEY;
-					int v = rand() % MAXKEY;
-					txn_update(k, v);
-					break;
-				}
-			}
+void YCSBWorker::worker() {
+	startBarrier->countDown();
+	startBarrier->waitFor();
+	int op;
+	long k, v;
+	while (running) {
+		op = rand() % 2;
+		switch (op) {
+		case 0:
+			// read txn
+			k = rand() % MAXKEY;
+			txnRead(k);
+			break;
+		case 1:
+			k = rand() % MAXKEY;
+			v = rand() % MAXKEY;
+			txnUpdate(k, v);
+			break;
 		}
 	}
-};
+}
+
+void YCSBLoader::load() {
+	// FIXME experiment simple workload
+	for (int i = 0; i < MAXKEY; i++) {
+		Record *r = new Record();
+		r->value = new char[sizeof(long)];
+		r->ver = 0;
+		db->put(i, r);
+	}
+}
 
 
 int main(int argc, char **argv) {
 	YDb ydb;
-	// FIXME magic number
 	int nthreads = 4;
-	// FIXME magic number
-	int num_secs = 5;
+	int numSecs = 5;
 	
 	/* load data */
-	// FIXME experiment simple workload
-	for (int i = 0; i < MAXKEY; i++)
-		ydb.store[i] = i;
+	YCSBLoader loader(&ydb);
+	loader.load();
 
 	/* create workers, run workload */
 	running = true;
-	spin_barrier start_barrier(nthreads+1);
-	std::vector<ycsb_worker *> workers;
-	for (int i = 0; i < nthreads; i++)
-		workers.push_back(new ycsb_worker(&start_barrier, &ydb));
+	SpinBarrier startBarrier(nthreads+1);
+	std::vector<YCSBWorker*> workers;
+	for (int i = 0; i < nthreads; i++) {
+		YCSBWorker* w = new YCSBWorker(&startBarrier, &ydb);
+		workers.push_back(w);
+	}
 	// let's go!
-	start_barrier.count_down();
-	sleep(num_secs);
+	startBarrier.countDown();
+	sleep(numSecs);
 	running = false;
 
 	/* collect stats */
-	int num_txn = 0;
-	for(std::vector<ycsb_worker *>::iterator it = workers.begin(); it != workers.end(); ++it) {
-		num_txn += (*it)->get_num_commit();
+	int numTxn = 0;
+	for(std::vector<YCSBWorker*>::iterator it = workers.begin(); it != workers.end(); ++it) {
+		numTxn += (*it)->numCommit;
 	}
 
-	std::cout << "tps :" << num_txn * 1.0 / num_secs;
+	std::cout << "tps :" << numTxn * 1.0 / numSecs;
 
 	return 0;
 }

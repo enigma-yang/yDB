@@ -1,22 +1,19 @@
 #include <iostream>
 
-#include "common.h"
 #include "ydb.h"
-#include "txn.h"	
 
-void YDb::put(KTYPE k, VTYPE v) {
-	store[k] = v;
+void YDb::put(long k, Record* v) {
+	// TODO
 }
 
-VTYPE YDb::get(KTYPE k) {
-	// FIXME what if k not exist
-	return store[k];
+Record* YDb::get(long k) {
+	// TODO
 }
 
-void YDb::remove(KTYPE k) {
-	store.erase(k);
+void YDb::remove(long k) {
+	// TODO
 }
 
-Txn YDb::new_txn() {
-	return Txn(&mtx);
+Txn* YDb::newTxn() {
+	return new Txn(this);
 }

@@ -1,29 +1,29 @@
 #ifndef _SPINBARRIER_H_
 #define _SPINBARRIER_H_
 
-#include "amd64.h"
+#include "asm.h"
 
 /**
  * Barrier implemented by spinning
  */
 
-class spin_barrier {
+class SpinBarrier {
 public:
-  spin_barrier(size_t n)
+  SpinBarrier(size_t n)
     : n(n)
   {
   }
 
-  spin_barrier(const spin_barrier &) = delete;
-  spin_barrier(spin_barrier &&) = delete;
-  spin_barrier &operator=(const spin_barrier &) = delete;
+  SpinBarrier(const SpinBarrier &) = delete;
+  SpinBarrier(SpinBarrier &&) = delete;
+  SpinBarrier &operator=(const SpinBarrier &) = delete;
 
-  ~spin_barrier()
+  ~SpinBarrier()
   {
   }
 
   void
-  count_down()
+  countDown()
   {
     // written like this (instead of using __sync_fetch_and_add())
     // so we can have assertions
@@ -35,7 +35,7 @@ public:
   }
 
   void
-  wait_for()
+  waitFor()
   {
     while (n > 0)
       nop_pause();
