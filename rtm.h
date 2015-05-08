@@ -83,7 +83,7 @@ RETRY: \
 		} \
 		_xend(); \
 	} else { \
-		if (++numAbort < 2) goto RETRY; \
+		if (++numAbort < 3) goto RETRY; \
 		lockedByMe = true; \
 		lock->lock(); \
 		code_block \
@@ -101,7 +101,7 @@ RETRY: \
 		} \
 		_xend(); \
 	} else { \
-		if (++numAbort < 2) goto RETRY; \
+		if (++numAbort < 3) goto RETRY; \
 		lock->lock(); \
 		code_block \
 		lock->unlock(); \

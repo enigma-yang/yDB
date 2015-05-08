@@ -117,7 +117,7 @@ void YCSBLoader::load() {
 
 int main(int argc, char **argv) {
 	YDb ydb;
-	int nthreads = 4;
+	int nthreads = 3;
 	int numSecs = 10;
 	int id = 0;
 	
