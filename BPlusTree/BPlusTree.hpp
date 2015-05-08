@@ -49,14 +49,14 @@ private:
     {
         friend class BPlusTree;
     private:
-        long value[maxLeafSlot];
+        void* value[maxLeafSlot];
         long key[maxLeafSlot];
         leafNode *left;
         leafNode *right;
     public:
         leafNode() {isLeaf = true; left = NULL; right = NULL;}
         virtual int getLower(int k);
-        void insert(long key, long value);
+        void insert(long key, void* value);
         int split(leafNode* newNode);
     };
 
@@ -66,9 +66,9 @@ private:
     sem_t lock;
 
 private:
-    bool get(Node* node, long key, long& value);
-    void insertNode(Node* node, long key, long value, Node* p, stack<Node *>* parent);
-    bool put(long key, long value, bool f);
+    void* get(Node* node, long key);
+    void insertNode(Node* node, long key, void* value, Node* p, stack<Node *>* parent);
+    void put(long key, void* value, bool f);
 
 public:
     BPlusTree() {
@@ -77,9 +77,9 @@ public:
         sem_init(&lock, 0, 1);
     }
 
-    bool get(long key, long& value);
-    void put(long key, long value);
-    map<long, long> getrange(long key1, long key2);
+    void* get(long key);
+    void put(long key, void* value);
+    map<long, void*> getrange(long key1, long key2);
 };
 
 #endif

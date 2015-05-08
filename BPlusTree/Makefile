@@ -9,12 +9,12 @@ all: depend $(APP)
 .PHONY: all
 
 depend: $(SRC)
-	$(CC) -MM $(SRC) > .depend
+	$(CC) $(SRC) > .depend
 
 -include .depend
 
 $(APP): $(OBJ)
-	$(CC) -o $@ $^
+	$(CC) -o $@ $^ -lpthread
 
 .PHONY: clean
 clean:
