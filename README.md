@@ -6,8 +6,8 @@ We are going to use Intel RTM to implement a prototype of in-memory database tha
 
 ###Result
 
-![alt tag](https://raw.github.com/Zhiyuan-Yang/yDB/occ/chart1.png)
-![alt tag](https://raw.github.com/Zhiyuan-Yang/yDB/occ/chart2.png)
+![alt tag](https://raw.githubusercontent.com/Zhiyuan-Yang/yDB/occ/chart1.png?token=AHtqN19LmOKlJB_kHZFtf-f_PU2MjjUWks5VVoPwwA%3D%3D)
+![alt tag](https://raw.githubusercontent.com/Zhiyuan-Yang/yDB/occ/chart2.png?token=AHtqN77Ok8P7OSXOdewGzm4Wf7Q1Vq42ks5VVoQLwA%3D%3D)
 
 ###BACKGROUND
 Traditionally, databases use fine-grained locks and atomic operations to do synchronization. While it can provide good performance and reasonable scalability, the resulting code is very complex to reason and it is difficult to make sure the correctness on different memory models of processors. 
