@@ -16,14 +16,22 @@
 
 #define MAXKEY 10000000
 
-volatile bool running;
+bool running;
 
-YCSBWorker::YCSBWorker(SpinBarrier* startBarrier, YDb* db) {
+YCSBWorker::YCSBWorker(SpinBarrier* startBarrier, YDb* db, int id) {
 	this->startBarrier= startBarrier;
 	this->db = db;
 	this->numCommit = 0;
 	this->numAbort = 0;
+	this->id = id;
 	this->thread = new std::thread(&YCSBWorker::worker, this);
+
+	// bind core
+	cpu_set_t cpuset;
+	CPU_ZERO(&cpuset);
+	CPU_SET(id, &cpuset);
+	pthread_setaffinity_np(thread->native_handle(), sizeof(cpuset), &cpuset);
+	std::cout << "on core " << id << std::endl;
 }
 
 
@@ -103,6 +111,7 @@ int main(int argc, char **argv) {
 	YDb ydb;
 	int nthreads = 4;
 	int numSecs = 10;
+	int id = 0;
 	
 	/* load data */
 	YCSBLoader loader(&ydb);
@@ -113,7 +122,7 @@ int main(int argc, char **argv) {
 	SpinBarrier startBarrier(nthreads+1);
 	std::vector<YCSBWorker*> workers;
 	for (int i = 0; i < nthreads; i++) {
-		YCSBWorker* w = new YCSBWorker(&startBarrier, &ydb);
+		YCSBWorker* w = new YCSBWorker(&startBarrier, &ydb, id++);
 		workers.push_back(w);
 	}
 	// let's go!
@@ -122,12 +131,15 @@ int main(int argc, char **argv) {
 	running = false;
 
 	/* collect stats */
-	int numTxn = 0;
+	int numCommit = 0;
+	int numAbort = 0;
 	for(std::vector<YCSBWorker*>::iterator it = workers.begin(); it != workers.end(); ++it) {
-		numTxn += (*it)->numCommit;
+		numCommit += (*it)->numCommit;
+		numAbort += (*it)->numAbort;
 	}
 
-	std::cout << "tps :" << numTxn * 1.0 / numSecs;
+	std::cout << "ops :" << numCommit * 1.0 / numSecs << std::endl;
+	std::cout << "aps :" << numAbort * 1.0 / numSecs << std::endl;
 
 	return 0;
 }

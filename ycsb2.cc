@@ -16,7 +16,7 @@
 
 volatile bool running;
 
-YCSBWorker::YCSBWorker(SpinBarrier* startBarrier, YDb* db) {
+YCSBWorker::YCSBWorker(SpinBarrier* startBarrier, YDb* db, int id) {
 	this->startBarrier= startBarrier;
 	this->db = db;
 	this->thread = new std::thread(&YCSBWorker::worker, this);
@@ -73,7 +73,7 @@ void YCSBWorker::worker() {
 	int op;
 	long k=1, v;
 	//while (running) {
-	for (int i = 0; i < 100000; ) {
+	for (int i = 0; i < 1000000; ) {
 		Txn *txn;
 		txn = db->newTxn();
 		txn->read(k, (char *)&v, sizeof(v));
@@ -100,6 +100,7 @@ int main(int argc, char **argv) {
 	YDb ydb;
 	int nthreads = 4;
 	int numSecs = 60;
+	int id = 0;
 	
 	/* load data */
 	YCSBLoader loader(&ydb);
@@ -110,7 +111,7 @@ int main(int argc, char **argv) {
 	SpinBarrier startBarrier(nthreads+1);
 	std::vector<YCSBWorker*> workers;
 	for (int i = 0; i < nthreads; i++) {
-		YCSBWorker* w = new YCSBWorker(&startBarrier, &ydb);
+		YCSBWorker* w = new YCSBWorker(&startBarrier, &ydb, id++);
 		workers.push_back(w);
 	}
 	// let's go!
