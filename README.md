@@ -19,14 +19,12 @@ Research results[2] show that RTM is limited by the working set because processo
 DBX[1] has a simple design and achieves great performance, so we followed its design. We separate the database into two layers: storage layer and transaction layer.  
 Storage layer is responsible to provide simply get and put interface, and it's implemented using B+ tree. It's hard to apply fine-grained lock on B+ tree, but with RTM, things become much easier. We can simply enclose B+ tree operations with _xbegin() and _xend() and provide a fallback handler which graps coarse-grain lock and then performs the operations.
 Transaction layer is reponsible to provide transaction ability, and it's implemented using optimistic concurrency control. If using pessimistic concurrency control, both transaction execution and transaction commit need to be syncrhonized which causes larger working set and longer critical section. With optimisitic concurrency control, only transaction commit need to be synchronized. The following are core algorithsm(graphs are from [1]):
-<br/>
-<a href="url"><img src="https://raw.githubusercontent.com/Zhiyuan-Yang/yDB/occ/design1.png?token=AHtqN2wYvNuJuL_wYqxUoi6uigNyUm_Mks5VVo9ywA%3D%3D" height="360"></a>
 
-<a href="url"><img src="https://raw.githubusercontent.com/Zhiyuan-Yang/yDB/occ/d3.png?token=AHtqN5pOLhWpt10bxNEsF5xK2l4O0_hBks5VVo-owA%3D%3D" align="left" width="480"></a>
+<a href="url"><img src="https://raw.githubusercontent.com/Zhiyuan-Yang/yDB/occ/d3.png?token=AHtqN5pOLhWpt10bxNEsF5xK2l4O0_hBks5VVo-owA%3D%3D" align="left" width="420"></a>
 
-<a href="url"><img src="https://raw.githubusercontent.com/Zhiyuan-Yang/yDB/occ/d2.png?token=AHtqN_69vtOKhbnZaAYZqR2aBzrX6XfHks5VVo-awA%3D%3D" align="right" width="480"></a>
-<br/>
+<a href="url"><img src="https://raw.githubusercontent.com/Zhiyuan-Yang/yDB/occ/d2.png?token=AHtqN_69vtOKhbnZaAYZqR2aBzrX6XfHks5VVo-awA%3D%3D" align="right" width="420"></a>
 
+<a href="url"><img src="https://raw.githubusercontent.com/Zhiyuan-Yang/yDB/occ/design1.png?token=AHtqN2wYvNuJuL_wYqxUoi6uigNyUm_Mks5VVo9ywA%3D%3D" align="right" height="360"></a>
 
 ###EVALUATION
 We tested yDB on machine with Intel(R) Core(TM) i7-4770 CPU @ 3.40GHz. The benchmark we used is derived from YCSB benchmark. The modifications are:  
@@ -50,6 +48,7 @@ Number of Threads | Throughput (ops/sec)
 4	| 4.85E+06
 
 We can see yDB scales well from 1-4 cores. It achieves same performance of Silo, but it's not as good as DBX.
+
 
 ###LIMITATION and FUTURE WORKS
 1. Currently yDB doesn't scale well from 5 to 8 threads, but DBX[1] scales well consistently from 1 to 8 threads, we are still working on this problem. 
