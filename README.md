@@ -30,6 +30,17 @@ The benchmark we used is derived from YCSB bechmark. The modifications are:
 
 The result is in following table and chart. Chart from DBX is also attached. 
 
+<a href="url"><img src="https://raw.githubusercontent.com/Zhiyuan-Yang/yDB/occ/chart1.png?token=AHtqN19LmOKlJB_kHZFtf-f_PU2MjjUWks5VVoPwwA%3D%3D" height="331" width="480" ></a>
+
+![chart2](https://raw.githubusercontent.com/Zhiyuan-Yang/yDB/occ/chart2.png?token=AHtqN77Ok8P7OSXOdewGzm4Wf7Q1Vq42ks5VVoQLwA%3D%3D)
+
+Number of Threads | Throughput (ops/sec)
+------------ | -------------
+1	| 1.43E+06
+2	| 2.76E+06
+3	| 3.88E+06
+4	| 4.85E+06
+
 We can see yDB scales well from 1-4 cores. It achieves same performance of Silo, but it's not as good as DBX.
 
 ###LIMITATION and FUTURE WORKS
