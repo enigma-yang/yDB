@@ -21,12 +21,13 @@ Storage layer is responsible to provide simply get and put interface, and it's i
 Transaction layer is reponsible to provide transaction ability, and it's implemented using optimistic concurrency control. If using pessimistic concurrency control, both transaction execution and transaction commit need to be syncrhonized which causes larger working set and longer critical section. With optimisitic concurrency control, only transaction commit need to be synchronized.  
 
 ###EVALUATION
-We tested yDB on machine with Intel(R) Core(TM) i7-4770 CPU @ 3.40GHz. The benchmark we used is derived from YCSB benchmark. The modifications are:
+We tested yDB on machine with Intel(R) Core(TM) i7-4770 CPU @ 3.40GHz. The benchmark we used is derived from YCSB benchmark. The modifications are:  
 (1) transactions are supported using store procedure  
 (2) transactions are issued via function call to eliminate the network bottleneck  
 (3) only read and write transactions are used  
 (4) read-write ratio is 80:20  
 (5) the number of records is 10M and the size of real data is 8bytes. The size of real data doesn't really matters because what yDB really handles is pointer not real data.  
+
 The result is in following table and chart. Chart from DBX is also attached. 
 
 <a href="url"><img src="https://raw.githubusercontent.com/Zhiyuan-Yang/yDB/occ/chart1.png?token=AHtqN19LmOKlJB_kHZFtf-f_PU2MjjUWks5VVoPwwA%3D%3D" height="331" width="480" ></a>
