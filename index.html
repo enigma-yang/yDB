@@ -36,21 +36,21 @@
 <h3>
 <a id="summary" class="anchor" href="#summary" aria-hidden="true"><span class="octicon octicon-link"></span></a>SUMMARY</h3>
 
-<p>We implemented an in-memory kv store called yDB based on Intel RTM(Restricted Transactional Memory) and optimistic concurrency control[2]. yDB is high-performance and scalable on multicore machine, and it can achieve the same performance of Silo(SOSP'13)[3] on a benchmark derived from YCSB. Specificaly, it achieves 4.8 million transaction per second using 4 cores.</p>
+<p>We implemented an in-memory kv store called yDB based on Intel RTM (Restricted Transactional Memory) and optimistic concurrency control[2]. yDB is high-performance and scalable on multicore machine, and it can achieve the same performance of Silo (SOSP'13)[3] on a benchmark derived from YCSB. Specificaly, it achieves 4.8 million transactions per second using 4 cores.</p>
 
 <h3>
 <a id="background" class="anchor" href="#background" aria-hidden="true"><span class="octicon octicon-link"></span></a>BACKGROUND</h3>
 
 <p>Traditionally, databases use fine-grained locks and atomic operations to do synchronization and transaction. While it can provide good performance and reasonable scalability, it's hard to make sure the correctness and the resulting code is very complex.  </p>
 
-<p>Recently, Intel introduces restricted transactional memory (RTM) support in Haswell processors. Using RTM instructions, one can transactionally execute a part of code and explicitly abort in the middle of transactional execution, which provides a much easier way to do synchronization.</p>
+<p>Recently, Intel introduces restricted transactional memory (RTM) support in Haswell processors. Using RTM instructions, one can transactionally execute a piece of code, which is a much easier way to do synchronization.</p>
 
 <h3>
 <a id="the-challenge" class="anchor" href="#the-challenge" aria-hidden="true"><span class="octicon octicon-link"></span></a>THE CHALLENGE</h3>
 
-<p>Although RTM is a promising in synchronizaiton problem, it is challenging to use it to implement a in-memory database with high performance and good scalability. </p>
+<p>Although RTM is promising in synchronizaiton problem, it is challenging to use it to implement an in-memory database with high performance and good scalability. </p>
 
-<p>Research results show that RTM is limited by the working set because processors use cache implement it. Any transaction with working set larger than cache size will be aborted, so it's critical to reduce the working set size. Also, RTM doesn't guarantee progress but let user do it using fallback handler. Fallback handlers typically use coarse grained lock which is always performance-bottleneck, so it's critical to make sure to reduce RTM abort and use fallback handler less frequently.</p>
+<p>Research results[2] show that RTM is limited by the working set because processors use cache implement it. Any transaction with working set larger than cache size will be aborted, so it's critical to reduce the working set size. Also, RTM doesn't guarantee progress but let user do it using fallback handler. Fallback handlers typically use coarse grained lock which is always performance-bottleneck, so it's critical to make sure to reduce RTM abort and use fallback handler less frequently.</p>
 
 <h3>
 <a id="design" class="anchor" href="#design" aria-hidden="true"><span class="octicon octicon-link"></span></a>DESIGN</h3>
@@ -58,6 +58,14 @@
 <p>DBX[1] has a simple design and achieves great performance, so we followed its design. We separate the database into two layers: storage layer and transaction layer.<br>
 Storage layer is responsible to provide simply get and put interface, and it's implemented using B+ tree. It's hard to apply fine-grained lock on B+ tree, but with RTM, things become much easier. We can simply enclose B+ tree operations with _xbegin() and _xend() and provide a fallback handler which graps coarse-grain lock and then performs the operations.
 Transaction layer is reponsible to provide transaction ability, and it's implemented using optimistic concurrency control. If using pessimistic concurrency control, both transaction execution and transaction commit need to be syncrhonized which causes larger working set and longer critical section. With optimisitic concurrency control, only transaction commit need to be synchronized.  </p>
+
+<p><a href="url"><img src="https://raw.githubusercontent.com/Zhiyuan-Yang/yDB/occ/d3.png?token=AHtqN5pOLhWpt10bxNEsF5xK2l4O0_hBks5VVo-owA%3D%3D" align="left" width="420"></a></p>
+
+<p><a href="url"><img src="https://raw.githubusercontent.com/Zhiyuan-Yang/yDB/occ/d2.png?token=AHtqN_69vtOKhbnZaAYZqR2aBzrX6XfHks5VVo-awA%3D%3D" align="right" width="420"></a></p>
+
+<p><a href="url"><img src="https://raw.githubusercontent.com/Zhiyuan-Yang/yDB/occ/design1.png?token=AHtqN2wYvNuJuL_wYqxUoi6uigNyUm_Mks5VVo9ywA%3D%3D" align="right" height="340"></a></p>
+
+<p><br>(These graphs are from DBX paper[1])  </p>
 
 <h3>
 <a id="evaluation" class="anchor" href="#evaluation" aria-hidden="true"><span class="octicon octicon-link"></span></a>EVALUATION</h3>
@@ -71,9 +79,9 @@ Transaction layer is reponsible to provide transaction ability, and it's impleme
 
 <p>The result is in following table and chart. Chart from DBX is also attached. </p>
 
-<p><a href="url"><img src="https://raw.githubusercontent.com/Zhiyuan-Yang/yDB/occ/chart1.png?token=AHtqN19LmOKlJB_kHZFtf-f_PU2MjjUWks5VVoPwwA%3D%3D" height="331" width="480"></a></p>
-
 <p><img src="https://raw.githubusercontent.com/Zhiyuan-Yang/yDB/occ/chart2.png?token=AHtqN77Ok8P7OSXOdewGzm4Wf7Q1Vq42ks5VVoQLwA%3D%3D" alt="chart2"></p>
+
+<p><a href="url"><img src="https://raw.githubusercontent.com/Zhiyuan-Yang/yDB/occ/chart1.png?token=AHtqN19LmOKlJB_kHZFtf-f_PU2MjjUWks5VVoPwwA%3D%3D" height="331" width="480"></a></p>
 
 <table>
 <thead>
@@ -108,7 +116,7 @@ Transaction layer is reponsible to provide transaction ability, and it's impleme
 <a id="limitation-and-future-works" class="anchor" href="#limitation-and-future-works" aria-hidden="true"><span class="octicon octicon-link"></span></a>LIMITATION and FUTURE WORKS</h3>
 
 <ol>
-<li>Currently yDB doesn't scales well from 5 to 8 threads, but DBX[1] scales well consistently from 1 to 8 threads, we are still working on this problem. </li>
+<li>Currently yDB doesn't scale well from 5 to 8 threads, but DBX[1] scales well consistently from 1 to 8 threads, we are still working on this problem. </li>
 <li>Current implementation only support read and write operations because that's enough to demonstrate its potential, but we are still going to implement other operations such as insert, delete and scan so that we can test it against full version of YCSB. </li>
 </ol>
 
