@@ -20,12 +20,16 @@ DBX[1] has a simple design and achieves great performance, so we followed its de
 Storage layer is responsible to provide simply get and put interface, and it's implemented using B+ tree. It's hard to apply fine-grained lock on B+ tree, but with RTM, things become much easier. We can simply enclose B+ tree operations with _xbegin() and _xend() and provide a fallback handler which graps coarse-grain lock and then performs the operations.
 Transaction layer is reponsible to provide transaction ability, and it's implemented using optimistic concurrency control. If using pessimistic concurrency control, both transaction execution and transaction commit need to be syncrhonized which causes larger working set and longer critical section. With optimisitic concurrency control, only transaction commit need to be synchronized. The following are core algorithsm(graphs are from [1]):
 
-<a href="url"><img src="https://raw.githubusercontent.com/Zhiyuan-Yang/yDB/occ/d3.png?token=AHtqN5pOLhWpt10bxNEsF5xK2l4O0_hBks5VVo-owA%3D%3D" align="left" width="420"></a>
+<a href="url"><img src="https://raw.githubusercontent.com/Zhiyuan-Yang/yDB/occ/d3.png?token=AHtqN5pOLhWpt10bxNEsF5xK2l4O0_hBks5VVo-owA%3D%3D" align="left" width="410"></a>
 
-<a href="url"><img src="https://raw.githubusercontent.com/Zhiyuan-Yang/yDB/occ/d2.png?token=AHtqN_69vtOKhbnZaAYZqR2aBzrX6XfHks5VVo-awA%3D%3D" align="right" width="420"></a>
+<a href="url"><img src="https://raw.githubusercontent.com/Zhiyuan-Yang/yDB/occ/d2.png?token=AHtqN_69vtOKhbnZaAYZqR2aBzrX6XfHks5VVo-awA%3D%3D" align="right" width="410"></a>
 
-<a href="url"><img src="https://raw.githubusercontent.com/Zhiyuan-Yang/yDB/occ/design1.png?token=AHtqN2wYvNuJuL_wYqxUoi6uigNyUm_Mks5VVo9ywA%3D%3D" align="right" height="320"></a>
+<a href="url"><img src="https://raw.githubusercontent.com/Zhiyuan-Yang/yDB/occ/design1.png?token=AHtqN2wYvNuJuL_wYqxUoi6uigNyUm_Mks5VVo9ywA%3D%3D" align="right" height="340"></a>
 
+<br/>  
+<br/>
+
+###  
 ###EVALUATION
 We tested yDB on machine with Intel(R) Core(TM) i7-4770 CPU @ 3.40GHz. The benchmark we used is derived from YCSB benchmark. The modifications are:  
 (1) transactions are supported using store procedure  
