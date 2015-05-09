@@ -27,7 +27,7 @@ Transaction layer is reponsible to provide transaction ability, and it's impleme
 <a href="url"><img src="https://raw.githubusercontent.com/Zhiyuan-Yang/yDB/occ/design1.png?token=AHtqN2wYvNuJuL_wYqxUoi6uigNyUm_Mks5VVo9ywA%3D%3D" align="right" height="340"></a>
 
 
-(The above graphs are from [1])  
+<br/>(The above graphs are from [1])  
 
 ###EVALUATION
 We tested yDB on machine with Intel(R) Core(TM) i7-4770 CPU @ 3.40GHz. The benchmark we used is derived from YCSB benchmark. The modifications are:  
