@@ -4,7 +4,7 @@ Team memeber: Zhiyuan Yang, Zhizhou Yang
 ###SUMMARY
 We are going to use Intel RTM to implement a prototype of in-memory database that is high-performance and scalable on multicore machine.
 
-###Result
+###RESULTS
 The first figure shows the throughput of spin-lock and Silo performance using B+ tree on multi-threads. There is no scalability for the spin-lock-based realization. For Silo, there is about 5M operations per second throughput on 4 threads.
 
 <a href="url"><img src="https://raw.githubusercontent.com/Zhiyuan-Yang/yDB/occ/chart1.png?token=AHtqN19LmOKlJB_kHZFtf-f_PU2MjjUWks5VVoPwwA%3D%3D" height="331" width="480" ></a>
