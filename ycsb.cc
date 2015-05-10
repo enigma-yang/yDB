@@ -91,7 +91,7 @@ void YCSBWorker::worker() {
 	long k, v;
 	while (running) {
 		op = fastrand();
-		switch ((op+id)%4) {
+		switch ((op+id)%5) {
 		case 0:
 		case 1:
 		case 2:
@@ -122,7 +122,7 @@ void YCSBLoader::load() {
 
 int main(int argc, char **argv) {
 	YDb ydb;
-	int nthreads = 8;
+	int nthreads = 1;
 	int numSecs = 10;
 	int id = 0;
 	
