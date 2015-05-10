@@ -16,6 +16,8 @@
 
 #define MAXKEY 10000000
 #define CLK_PER_MS 3400000
+#define NUM_THD 1
+#define NUM_SEC 10
 
 bool running;
 
@@ -91,7 +93,7 @@ void YCSBWorker::worker() {
 	long k, v;
 	while (running) {
 		op = fastrand();
-		switch ((op+id)%5) {
+		switch ((op+id)%4) {
 		case 0:
 		case 1:
 		case 2:
@@ -122,8 +124,8 @@ void YCSBLoader::load() {
 
 int main(int argc, char **argv) {
 	YDb ydb;
-	int nthreads = 3;
-	int numSecs = 10;
+	int nthreads = NUM_THD;
+	int numSecs = NUM_SEC;
 	int id = 0;
 	
 	/* load data */
