@@ -69,13 +69,14 @@ Number of Threads | Throughput (ops)
 8	| 7.2E+06
 
 <a href="url"><img src="https://github.com/Zhiyuan-Yang/yDB/blob/occ/graph1.png?raw=true"></a>
-<a href="url"><img src="https://github.com/Zhiyuan-Yang/yDB/blob/occ/graph2.png?raw=true"></a>
 
 For performance, it achieves about same performance of Silo(B+ tree in Silo), but it's not as good as DBX(RTM B+ tree). There are two reasons. First, in derived benchmark, 80% of transactions are read transactions, and read transactions are read-only. DBX uses snapshot of data to support fast read-only transactions which requires no commit phase, while yDB use normal read-operation and commit phase to perform read transactions. This optimization is reported to improve performance dramatically. Actually we've implemented DBX's read-only transactions but never got the same improvement, which means the performance is very implementation-dependent. Second, DBX has better tuning on RTM retry threshold. the paper says DBX use different threshold for different kinds of RTM abort and for different height of tree, while yDB use the same threshold for all RTM transactions. Also, the tuning of this threshold is very important. Initially we used 3 as threshold, but got very poor scalability on 5-8 threads. Then we tuned it to 10 and got good scalability on 1-8 threads.
 
 For scalability, we can see yDB scales well from 1-8 threads. Scalability test can only be performed using 1-8 threads due to hardware limit. Currently Intel processors that support RTM can have at most 4 cores with hyperthreading. So the scalability result here is constraint in this scope and may not be true with more than 4 cores. Notice yDB starts scale slower after 4 threads, and the reason is with 5-8 threads there are multiple threads on the same core and sharing the same cache, which results in half max working set size and causes more abort.
 
-To see the overhead of transaction layer, we test the throughput of barely storage layer without transaction layer(although the correctness cannot be guaranteed). From the following result, we can see in our implementation our transaction layer has about 25% overhead, which is higher than reported 10% overhead in DBX paper. Although in DBX paper this metric is tested using a different benchmark(TPC-C), the most important reason for this difference is yDB don't have fast read-only transaction support and every read transaction must pass commit phase which taxes the transaction layer.
+To see the overhead of transaction layer, we test the throughput of barely storage layer without transaction layer(although the correctness cannot be guaranteed). From the following graph, we can see in our implementation our transaction layer has about 25% overhead, which is higher than reported 10% overhead in DBX paper. Although in DBX paper this metric is tested using a different benchmark(TPC-C), the most important reason for this difference is yDB don't have fast read-only transaction support and every read transaction must pass commit phase which taxes the transaction layer.
+
+<a href="url"><img src="https://github.com/Zhiyuan-Yang/yDB/blob/occ/graph2.png?raw=true"></a>
 
 To see if yDB can fit into RTM, we evaluate the RTM transaction abort rate and show the result in the following graph. We can see the abort rate is very low (always less than 1%).  
 
