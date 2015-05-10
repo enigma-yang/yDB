@@ -1,67 +1,94 @@
-###yDB: high-performance and scalable in-memory database based on RTM
-Team memeber: Zhiyuan Yang, Zhizhou Yang
+###yDB: high-performance and scalable in-memory key-value store based on RTM
+Team member: Zhiyuan Yang, Zhizhou Yang
 
 ###SUMMARY
-We are going to use Intel RTM to implement a prototype of in-memory database that is high-performance and scalable on multicore machine.
-
-###RESULTS
-The first figure shows the throughput of spin-lock and Silo performance using B+ tree on multi-threads. There is no scalability for the spin-lock-based realization. For Silo, there is about 5M operations per second throughput on 4 threads.
-
-<a href="url"><img src="https://raw.githubusercontent.com/Zhiyuan-Yang/yDB/occ/chart1.png?token=AHtqN19LmOKlJB_kHZFtf-f_PU2MjjUWks5VVoPwwA%3D%3D" height="331" width="480" ></a>
-
-The second figure shows the throughput performance of our yDB implementation based on RTM. The is also a chart showing the detailed throughput of our database transactions on different number of threads. From the figure, it can be implied that we accessed a similar throughput level as Silo.
-
-![chart2](https://raw.githubusercontent.com/Zhiyuan-Yang/yDB/occ/chart2.png?token=AHtqN77Ok8P7OSXOdewGzm4Wf7Q1Vq42ks5VVoQLwA%3D%3D)
-
-Number of Threads | Throughput (ops/sec)
------------- | -------------
-1	| 1.43E+06
-2	| 2.76E+06
-3	| 3.88E+06
-4	| 4.85E+06
+We implemented an in-memory key-value store called yDB based on Intel RTM (Restricted Transactional Memory) and optimistic concurrency control[2]. yDB is high-performance and scalable on multicore machine. It can achieve the same performance of one of a state-of-art in-memory databases called Silo (SOSP'13)[3] on a benchmark derived from YCSB. Specifically, it achieves 7.2 million tps using 4 cores with 8 hardware threads. Also, it scales well from 1 threads to 8 threads on 4-core CPU with hyperthreading.
 
 ###BACKGROUND
-Traditionally, databases use fine-grained locks and atomic operations to do synchronization. While it can provide good performance and reasonable scalability, the resulting code is very complex to reason and it is difficult to make sure the correctness on different memory models of processors. 
+Traditionally, databases use fine-grained locks and atomic operations to do synchronization and transaction. While it can provide good performance and reasonable scalability, it's hard to make sure the correctness and the resulting code is very complex.  
 
-Recently, Intel introduces restricted transactional memory (RTM) support in Haswell processors. Using RTM instructions, one can transactionally execute a part of code or explicitly abort in the middle of transactional execution. If a transaction conflicts with other concurrent memory operations, the processor hardware will discard all its writes and roll back the system to the begining of the execution. All the transaction properties are guaranteed by hardware, so this provides a much easier way to do synchronizations comparing.
+Recently, Intel introduces restricted transactional memory (RTM) support in Haswell processors. Using RTM instructions, one can transactionally execute a piece of code, which is a much easier way to do synchronization. RTM doesn't guarantee progress but let user do it using fallback handler. Typically, in fallback handler, user may either retry the transaction or grab a coarse-grained lock and then perform transaction.
+```
+RETRY:
+	_xbegin(ABORT)
+	do_transaction()
+	_xend()
+	return
+
+ABORT:
+	if numRetry < threshold
+		goto RETRY
+	else
+		lock(l)
+		do_transaction()
+		unlock(l)
+	return
+```
 
 ###THE CHALLENGE
-Although RTM is a promising solution in synchronizaiton problem, it is challenging to use it to implement a in-memory database with high performance and good scalability. 
+Although RTM is promising in synchronizaiton problem, it is challenging to use it to implement an in-memory database with high performance and good scalability. 
 
-Firstly, even it sounds straightforward to use RTM for synchronization, its programming model is different from other synchronization mechanism and currently we have no experience in it. 
+Research results[1] show that RTM is limited by the working set size because processors use cache implement it. Any transaction with working set larger than cache(L1) size will be aborted, so it's critical to reduce the working set size. Also, coarse-grained lock in fallback handlers is a performance-bottleneck, so it's critical to reduce the possibility of RTM abort and use fallback handler less frequently.
 
-Secondly, it is not clear how to adopt RTM programming model in database architecture and also it is difficult to debug RTM related bugs because within transactional execution many debugging related instructions are forbidded. 
+###DESIGN
+DBX[1] has a simple design and achieves great performance, so we followed its design. We separate the database into two layers: storage layer and transaction layer. The following graph illustrates the architecture(graph is from [1]):  
+<a href="url"><img src="https://github.com/Zhiyuan-Yang/yDB/blob/occ/arch.png?raw=true"></a>
 
-Thirdly, RTM's abstraction is very simple, but we are not sure about the real performance characteristics of Intel's implementation and it needs efforts to achieve high performance and good scalability.
-
-###RESOURCES
-We are going to start our project from scratch, but in case of the time pressure, we may use existing library such as B+ tree library if it can fit in our purpose well. 
-
-For the database design, currently we are reading recent conference papers and investigating existing efforts on this topic. We found these papers [1][2][3] are very useful in high-performance in-memory database design and may adopt some ideas of them. 
-
-To use RTM techinque, we need a machine with CPU that supports RTM, but we could not find such one in CMU.
+Storage layer is responsible to provide simply put/get interface, and it's implemented using B+ tree. It's hard to apply fine-grained lock on B+ tree correctly, but with RTM, things become much easier. We can simply enclose B+ tree operations with _xbegin() and _xend() and provide a fallback handler. Actually, the data structure of storage layer doesn't matter as long as put/get interface is offered. For example, we can also use hashmap as storage layer(but make it hard to implement scan operation).  
+Transaction layer is reponsible to provide transaction ability, and it's implemented using optimistic concurrency control. If using pessimistic concurrency control, both transaction execution and transaction commit need to be syncrhonized which causes larger working set and longer critical section, which make RTM more likely to abort. With optimisitic concurrency control, transaction execution and transaction commit are separated, and only transaction commit need to be synchronized.  
 
 
-###GOALS AND DELIVERABLES
-Our goal is to implement a high-performance and scalable in-memory database using RTM technique. 
+In transaction execution, we track the read set and write set of transactions. To read a data entry, we first get the data from write set if we already write this entry, otherwise we read the data from storage layer with its version number. Notice we use RTM to ensure we read both data and version number atomically. To write a data entry, we just buffer it in write set and then apply all writes in transaction commit. See the following graph[1] for algorithm of read interface offered by transaction layer. 
 
-For the functionality, we would like to make it able to run TPC-C benchmark or YCSB benchmark. We are going to use B-tree based index and not going to implement hashtable based index. Due to the time pressure, we are not going to support the durability.
+<a href="url"><img src="https://github.com/Zhiyuan-Yang/yDB/blob/occ/algo-read.png?raw=true"></a>
 
-For the performance, we would like to achieve the tps(transaction per second) no worse than the start-of-art in-memory database using fine-grained locks such as Silo in [2]. 
+In transaction commit, we first check whether data in read set has been updated by checking version number, and then check whether data in write set has been deleted. If anything gos wrong, the transaction will be aborted. Otherwise, we apply all writes of this transaction to storage layer and update version numbers of data. Then whole commit phase need to be guarded by RTM. See the following graph[1] for algorithm of transaction commit.  
 
-For the scalability, we would like to show it can scale linearly as the number of threads. Since current Intel RTM can only support at most 4 cores, we may only test the scalability from 1 threads to 8 threads. Also, the hyperthreading feature may affect the RTM performance, we expect the scalability may decrease after threads number exceeds 4.
+<a href="url"><img src="https://github.com/Zhiyuan-Yang/yDB/blob/occ/algo-commit.png?raw=true"></a>
 
-After this project, we expect we can demo the common database functionality and the testing result(data and graphs) about performance and scalability using TPC-C or YCSB benchmark.
 
-###SCHEDULE
-| Date        | Milestone  |
-| ------------- |-------------------------|
-| 4.9      | Design arthitecture of the database, learn to use RTM. |
-| 4.16      | Realize our naive database architecture using RTM. |
-| 4.23 |  Evaluate the performance of yDB, figure out bottlenecks of the database |
-| 4.30 | Optimize the implementation of yDB and try to achieve high performance in RTM. |
-| 5.7 | Compare yDB with other transactional databases and make evaluations.  |
-| 5.11 | Parallelism competition and final report. |
+###EVALUATION
+We implemented yDB using C++. As in Silo and DBX, we use fixed-length key(8 bytes). Storage layer manages <key, pointer> pair, in which pointer points to a recordthat contains version number and pointer to real data. This implementation adds another layer of indirection, but make storage layer fairly simple and decoupled from data type. B+ tree node is 256 bytes with fanout of 15. Transactions are supported via store procedure. Insert/read/update operations are supported, and delete are partially supported because we simply mark the deleted data but lack the garbage collector now. Scan can be supported but not supported now.
+
+We tested yDB on a machine with Intel(R) Core(TM) i7-4770 CPU @ 3.40GHz and 16 GB RAM. The benchmark we used is derived from DBX's and Silo's benchmark which are derived from YCSB benchmark. The modifications are:  
+(1) Transactions are issued via function call to eliminate the network bottleneck  
+(2) Data are bulk-loaded before testing, and only read and write transactions are used in testing  
+(3) Read-write ratio is 80:20  
+(4) The number of records is 10M. This number is used because Silo is tested using 160M data on a machine with 256 GB RAM. Since we only have machine with 16 GB RAM, we reduce the data size by a factor of 256/16=16 which is 10M.  
+(5) The size of real data is 8bytes. The size of real data doesn't really matters because what yDB really handles is pointer not real data. Using larger data size only causes more memory consumption and unnecessary extra stress the memory allocator. Also, larger data size may make memory copy between test worker and yDB become a potential bottleneck.  
+(6) Latency metrics don't make sense here. Since there is no durability support currently and all operations are in memory, so the latency is always very very low (less than 1 micro-seconds).  
+
+The result is in following table and chart. Chart from DBX is also attached for comparison.(The test of DBX is performed on a similar machine with 32 GB RAM[1])
+
+Number of Threads | Throughput (ops)
+------------ | -------------
+1	| 1.5E+06
+2	| 2.9E+06
+4	| 5.5E+06
+6	| 6.4E+06
+8	| 7.2E+06
+
+<a href="url"><img src="https://github.com/Zhiyuan-Yang/yDB/blob/occ/graph1.png?raw=true"></a>
+
+For performance, it achieves about same performance of Silo(B+ tree in Silo), but it's not as good as DBX(RTM B+ tree). There are two reasons. First, in derived benchmark, 80% of transactions are read transactions, and read transactions are read-only. DBX uses snapshot of data to support fast read-only transactions which requires no commit phase, while yDB use normal read-operation and commit phase to perform read transactions. This optimization is reported to improve performance dramatically. Actually we've implemented DBX's read-only transactions but never got the same improvement, which means the performance is very implementation-dependent. Second, DBX has better tuning on RTM retry threshold. the paper says DBX use different threshold for different kinds of RTM abort and for different height of tree, while yDB use the same threshold for all RTM transactions. Also, the tuning of this threshold is very important. Initially we used 3 as threshold, but got very poor scalability on 5-8 threads. Then we tuned it to 10 and got good scalability on 1-8 threads.
+
+For scalability, we can see yDB scales well from 1-8 threads. Scalability test can only be performed using 1-8 threads due to hardware limit. Currently Intel processors that support RTM can have at most 4 cores with hyperthreading. So the scalability result here is constraint in this scope and may not be true with more than 4 cores. Notice yDB starts scale slower after 4 threads, and the reason is with 5-8 threads there are multiple threads on the same core and sharing the same cache, which results in half max working set size and causes more abort.
+
+To see the overhead of transaction layer, we test the throughput of barely storage layer without transaction layer(although the correctness cannot be guaranteed). From the following graph, we can see in our implementation our transaction layer has about 25% overhead, which is higher than reported 10% overhead in DBX paper. Although in DBX paper this metric is tested using a different benchmark(TPC-C), the most important reason for this difference is yDB don't have fast read-only transaction support and every read transaction must pass commit phase which taxes the transaction layer.
+
+<a href="url"><img src="https://github.com/Zhiyuan-Yang/yDB/blob/occ/graph2.png?raw=true"></a>
+
+To see if yDB can fit into RTM, we evaluate the RTM transaction abort rate and show the result in the following graph. We can see the abort rate is very low (always less than 1%).  
+
+Number of Threads | Abort Rate(%)
+------------ | -------------
+1	| 0.01
+2	| 0.4
+4	| 0.24
+6	| 0.20
+8	| 0.26
+
+<a href="url"><img src="https://github.com/Zhiyuan-Yang/yDB/blob/occ/graph3.png?raw=true"></a>
 
 ###REFERENCES
 
