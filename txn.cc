@@ -8,6 +8,7 @@ Txn::Txn(YDb *db) {
 }
 
 bool Txn::commit(Stat *stat) {
+	return true;
 	bool lockedByMe = false;
 	int numAbort = 0;
 RTM_EXEC2(lock, lockedByMe, numAbort,
@@ -44,6 +45,12 @@ RTM_EXEC2(lock, lockedByMe, numAbort,
 
 /* FIXME assuem key exists */
 void Txn::read(long k, char *buf, int size, Stat* stat) {
+	Record *rp = db->get(k, stat);
+	char *value = rp->value;
+	for (int i = 0; i < size; i++)
+		buf[i] = value[i];
+	return;
+	/*
 	void *vp;
 	if (writeSet.find(k) != writeSet.end()) {
 		vp = writeValueSet[writeSet[k]];
@@ -61,6 +68,7 @@ void Txn::read(long k, char *buf, int size, Stat* stat) {
 		);
 		readSet[rp] = ver;
 	}
+	*/
 }
 
 void Txn::write(long k, char *buf, int size, Stat* stat) {

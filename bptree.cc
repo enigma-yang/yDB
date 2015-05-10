@@ -160,9 +160,27 @@ void* BPlusTree::get(long key, Stat* stat)
 {
     void* ptr = NULL;
 	int numAbort = 0;
-    RTM_EXEC3(lock, numAbort,
-        ptr = get(root, key);
-    )
+	
+RETRY:
+	XBEGIN(ABORT);
+	if (lock->isLocked())
+		_xabort(1);
+	else
+		ptr = get(root, key);
+	XEND();
+		
+	stat->numRTMAbortTree += numAbort;
+	stat->numRTMTree++;
+    return ptr;
+
+	unsigned status;
+	XFAIL_STATUS(ABORT, status);
+	//std::cout << status << std::endl;
+
+	if (++numAbort < 10) goto RETRY;
+	lock->lock();
+	ptr = get(root, key);
+	lock->unlock();
 	stat->numRTMAbortTree += numAbort;
 	stat->numRTMTree++;
     return ptr;

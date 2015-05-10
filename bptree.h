@@ -13,7 +13,7 @@ using namespace std;
 class BPlusTree
 {
 private:
-    static const int minimumDegree = 32;
+    static const int minimumDegree = 7;
 
     static const int minKeyNum = minimumDegree - 1;
     static const int maxKeyNum = 2 * minimumDegree - 1;
@@ -26,9 +26,8 @@ private:
     class Node
     {
     public:
-        bool isLeaf;
+        int isLeaf;
         int keyNum;
-        //char padding0[16];
 
         Node() { keyNum = 0;}
 
@@ -41,9 +40,13 @@ private:
     private:
         Node* child[maxChildNum];
         long key[maxKeyNum];
-        //char padding[8];
+		char padding[24];
     public:
-		innerNode() {isLeaf = false;}
+		innerNode() {
+			isLeaf = false;
+			//std::cout << sizeof(*this) << std::endl;
+			assert((sizeof(*this) % CACHELINE_SIZE) == 0);
+		}
         virtual int getLower(int k);
         void insert(long key, Node *p);
         int split(Node* newNode, long k);
@@ -58,7 +61,12 @@ private:
         leafNode *left;
         leafNode *right;
     public:
-        leafNode() {isLeaf = true; left = NULL; right = NULL;}
+        leafNode() {
+			isLeaf = true;
+			left = NULL;
+			right = NULL;
+			//assert((sizeof(*this) % CACHELINE_SIZE) == 0);
+		}
         virtual int getLower(int k);
         void insert(long key, void* value);
         int split(leafNode* newNode);
@@ -68,7 +76,7 @@ private:
     Node *root;
     leafNode* leftHead;
     Lock *lock;
-    //char padding[8*29 + 256];
+    char padding[40];
 
 private:
     void* get(Node* node, long key);
@@ -80,6 +88,7 @@ public:
         root = NULL;
         leftHead = NULL;
 		lock = new Lock();
+		assert((sizeof(*this) % CACHELINE_SIZE) == 0);
     }
 
     void* get(long key, Stat* stat);

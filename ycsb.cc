@@ -91,13 +91,13 @@ void YCSBWorker::worker() {
 	long k, v;
 	while (running) {
 		op = fastrand();
-		switch ((op+id)%5) {
+		switch ((op+id)%4) {
 		case 0:
 		case 1:
 		case 2:
 		case 3:
 			// read txn
-			k = fastrand();
+			k = fastrand()%MAXKEY;
 			txnRead(k);
 			break;
 		case 4:
@@ -122,7 +122,7 @@ void YCSBLoader::load() {
 
 int main(int argc, char **argv) {
 	YDb ydb;
-	int nthreads = 3;
+	int nthreads = 8;
 	int numSecs = 10;
 	int id = 0;
 	
