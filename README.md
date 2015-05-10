@@ -2,12 +2,12 @@
 Team member: Zhiyuan Yang, Zhizhou Yang
 
 ###SUMMARY
-We implemented an in-memory key-value store called yDB based on Intel RTM (Restricted Transactional Memory) and optimistic concurrency control[2]. yDB is high-performance and scalable on multicore machine. It can achieve the same performance of a state-of-art in-memory database called Silo (SOSP'13)[3] on a benchmark derived from YCSB. Specifically, it achieves 7.2 million tps using 4 cores with 8 hardware threads. Also, it scales well from 1 threads to 8 threads on 4-core CPU with hyperthreading.
+We implemented an in-memory key-value store called yDB based on Intel RTM (Restricted Transactional Memory) and optimistic concurrency control[2]. yDB is high-performance and scalable on multicore machine. It can achieve the same performance of one of a state-of-art in-memory databases called Silo (SOSP'13)[3] on a benchmark derived from YCSB. Specifically, it achieves 7.2 million tps using 4 cores with 8 hardware threads. Also, it scales well from 1 threads to 8 threads on 4-core CPU with hyperthreading.
 
 ###BACKGROUND
 Traditionally, databases use fine-grained locks and atomic operations to do synchronization and transaction. While it can provide good performance and reasonable scalability, it's hard to make sure the correctness and the resulting code is very complex.  
 
-Recently, Intel introduces restricted transactional memory (RTM) support in Haswell processors. Using RTM instructions, one can transactionally execute a piece of code, which is a much easier way to do synchronization. RTM doesn't guarantee progress but let user do it using fallback handler. Typically, in fallback handler, user may either retry the transaction or grab a coarse grained lock and then perform transaction.
+Recently, Intel introduces restricted transactional memory (RTM) support in Haswell processors. Using RTM instructions, one can transactionally execute a piece of code, which is a much easier way to do synchronization. RTM doesn't guarantee progress but let user do it using fallback handler. Typically, in fallback handler, user may either retry the transaction or grab a coarse-grained lock and then perform transaction.
 ```
 RETRY:
 	_xbegin(ABORT)
@@ -28,12 +28,12 @@ ABORT:
 ###THE CHALLENGE
 Although RTM is promising in synchronizaiton problem, it is challenging to use it to implement an in-memory database with high performance and good scalability. 
 
-Research results[1] show that RTM is limited by the working set because processors use cache implement it. Any transaction with working set larger than cache(L1) size will be aborted, so it's critical to reduce the working set size. Also, coarse-grained lock in fallback handlers is a performance-bottleneck, so it's critical to make sure to reduce the possibility of RTM abort and use fallback handler less frequently.
+Research results[1] show that RTM is limited by the working set size because processors use cache implement it. Any transaction with working set larger than cache(L1) size will be aborted, so it's critical to reduce the working set size. Also, coarse-grained lock in fallback handlers is a performance-bottleneck, so it's critical to reduce the possibility of RTM abort and use fallback handler less frequently.
 
 ###DESIGN
 DBX[1] has a simple design and achieves great performance, so we followed its design. We separate the database into two layers: storage layer and transaction layer. The following graph illustrates the architecture(graph is from [1]):  
-
-<a href="url"><img src="https://raw.githubusercontent.com/Zhiyuan-Yang/yDB/occ/design1.png?token=AHtqN2wYvNuJuL_wYqxUoi6uigNyUm_Mks5VVo9ywA%3D%3D" align="right" height="340"></a>
+<br/>
+<a href="url"><img src="https://github.com/Zhiyuan-Yang/yDB/blob/occ/arch.png?raw=true" align="right" height="340"></a>
 
 Storage layer is responsible to provide simply put/get interface, and it's implemented using B+ tree. It's hard to apply fine-grained lock on B+ tree correctly, but with RTM, things become much easier. We can simply enclose B+ tree operations with _xbegin() and _xend() and provide a fallback handler which graps coarse-grain lock and then performs the operations. Actually, the data structure of storage layer doesn't matter as long as put/get interface is offered. For example, we can also use hashmap as storage layer(but make it hard to implement scan operation).  
 Transaction layer is reponsible to provide transaction ability, and it's implemented using optimistic concurrency control. If using pessimistic concurrency control, both transaction execution and transaction commit need to be syncrhonized which causes larger working set and longer critical section, which make RTM more likely to abort. With optimisitic concurrency control, transaction execution and transaction commit are separated, and only transaction commit need to be synchronized.  
