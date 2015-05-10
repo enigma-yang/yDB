@@ -52,6 +52,8 @@ Number of Threads | Throughput (ops/sec)
 
 We can see yDB scales well from 1-4 cores. It achieves same performance of Silo, but it's not as good as DBX.
 
+Latency metrics don't make sense here. Since there is no durability support currently and all operations are in memory, so the latency is always very very low (less than 1 micro-seconds).
+
 
 ###LIMITATION and FUTURE WORKS
 1. Currently yDB doesn't scale well from 5 to 8 threads, but DBX[1] scales well consistently from 1 to 8 threads, we are still working on this problem. 
