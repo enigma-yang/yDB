@@ -77,6 +77,8 @@ For performance, it achieves about same performance of Silo(B+ tree in Silo), bu
 
 For scalability, we can see yDB scales well from 1-8 threads. Scalability test can only be performed using 1-8 threads due to hardware limit. Currently Intel processors that support RTM can have at most 4 cores with hyperthreading. So the scalability result here is constraint in this scope and may not be true with more than 4 cores.
 
+To see the overhead of transaction layer, we test the throught of barely storage layer without transaction layer(although the correctness cannot be guaranteed).
+
 ###REFERENCES
 
 [1] Wang, Zhaoguo, et al. "Using restricted transactional memory to build a scalable in-memory database." Proceedings of the Ninth European Conference on Computer Systems. ACM, 2014.
