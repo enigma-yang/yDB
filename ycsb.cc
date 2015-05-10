@@ -16,7 +16,7 @@
 
 #define MAXKEY 10000000
 #define CLK_PER_MS 3400000
-#define NUM_THD 1
+#define NUM_THD 8
 #define NUM_SEC 10
 
 bool running;
@@ -93,7 +93,7 @@ void YCSBWorker::worker() {
 	long k, v;
 	while (running) {
 		op = fastrand();
-		switch ((op+id)%4) {
+		switch ((op+id)%5) {
 		case 0:
 		case 1:
 		case 2:
