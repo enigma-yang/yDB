@@ -79,6 +79,15 @@ For scalability, we can see yDB scales well from 1-8 threads. Scalability test c
 
 To see the overhead of transaction layer, we test the throught of barely storage layer without transaction layer(although the correctness cannot be guaranteed).
 
+To see if yDB can fit into RTM, we evaluate the RTM transaction abort rate and show the result in the following graph. We can see the abort rate is very low.
+Number of Threads | Abort Rate(%)
+------------ | -------------
+1	| 1.5E+06
+2	| 2.9E+06
+4	| 5.5E+06
+6	| 6.4E+06
+8	| 7.2E+06
+
 ###REFERENCES
 
 [1] Wang, Zhaoguo, et al. "Using restricted transactional memory to build a scalable in-memory database." Proceedings of the Ninth European Conference on Computer Systems. ACM, 2014.
