@@ -24,11 +24,13 @@ public:
 	void txnUpdate(long k, long v);
 	int txnRemove(long k);
 	void worker();
+	inline int fastrand();
 
 private:
 	SpinBarrier *startBarrier;
 	YDb *db;
 	int id;
+	int g_seed;
 	Txn *readTxn;
 	Txn *updateTxn;;
 };

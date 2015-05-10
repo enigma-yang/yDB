@@ -10,6 +10,7 @@ public:
 	unsigned long numRTMTree;
 	unsigned long numCommit;
 	unsigned long numAbort;
+	double latency; // in ms
 
 	Stat() {
 		numRTMAbortTxn = 0;
@@ -18,6 +19,7 @@ public:
 		numRTMTree = 0;
 		numCommit = 0;
 		numAbort = 0;
+		latency = 0;
 	}
 };
 

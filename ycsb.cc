@@ -14,16 +14,10 @@
 #include "spinbarrier.h"
 
 
-#define MAXKEY 12345678
+#define MAXKEY 10000000
+#define CLK_PER_MS 3400000
 
 bool running;
-int g_seed;
-
-inline int fastrand() {
-	g_seed = (214013 * g_seed + 2531011);
-	//cout << g_seed << endl;
-	return (g_seed>>16)&0x7FFF; 
-}
 
 YCSBWorker::YCSBWorker(SpinBarrier* startBarrier, YDb* db, int id) {
 	this->startBarrier= startBarrier;
@@ -52,6 +46,8 @@ void YCSBWorker::txnRead(long k) {
 	txn->reuse();
 
 	long v;
+
+	unsigned long beginTsc = rdtsc();
 	txn->read(k, (char *)&v, sizeof(v), &stat);
 
 	if (txn->commit(&stat) == true) {
@@ -59,12 +55,15 @@ void YCSBWorker::txnRead(long k) {
 	} else {
 		stat.numAbort++;
 	}
+	unsigned long endTsc = rdtsc();
+	stat.latency += (endTsc - beginTsc)*1.0 / CLK_PER_MS;
 }
 
 void YCSBWorker::txnUpdate(long k, long v) {
 	Txn* txn = updateTxn;
 	txn->reuse();
 
+	unsigned long beginTsc = rdtsc();
 	txn->write(k, (char *)&v, sizeof(v), &stat);
 
 	if (txn->commit(&stat) == true) {
@@ -72,17 +71,23 @@ void YCSBWorker::txnUpdate(long k, long v) {
 	} else {
 		stat.numAbort++;
 	}
+	unsigned long endTsc = rdtsc();
+	stat.latency += (endTsc - beginTsc)*1.0 / CLK_PER_MS;
 }
 
 // TODO to be implemented
 int YCSBWorker::txnRemove(long k) {
 }
 
+inline int YCSBWorker::fastrand() {
+	g_seed = (214013 * g_seed + 2531011);
+	return (g_seed>>16)&0x7FFF; 
+}
 
 void YCSBWorker::worker() {
 	startBarrier->countDown();
 	startBarrier->waitFor();
-	unsigned long op;
+	long op;
 	long k, v;
 	while (running) {
 		op = fastrand();
@@ -92,12 +97,12 @@ void YCSBWorker::worker() {
 		case 2:
 		case 3:
 			// read txn
-			k = (op+1000000*id)%MAXKEY;
+			k = fastrand();
 			txnRead(k);
 			break;
 		case 4:
-			k = (op+1000000*id)%MAXKEY;
-			v = (op+1000000*id)%MAXKEY;
+			k = fastrand();
+			v = k;
 			txnUpdate(k, v);
 			break;
 		}
@@ -148,6 +153,7 @@ int main(int argc, char **argv) {
 		stat.numRTMAbortTxn += (*it)->stat.numRTMAbortTxn;
 		stat.numRTMTree += (*it)->stat.numRTMTree;
 		stat.numRTMAbortTree += (*it)->stat.numRTMAbortTree;
+		stat.latency += (*it)->stat.latency;
 	}
 
 	std::cout << "ops :" << stat.numCommit * 1.0 / numSecs << std::endl;
@@ -156,6 +162,7 @@ int main(int argc, char **argv) {
 	std::cout << "rtmAbortTxn :" << stat.numRTMAbortTxn << std::endl;
 	std::cout << "rtmTree :" << stat.numRTMTree << std::endl;
 	std::cout << "rtmAbortTree :" << stat.numRTMAbortTree << std::endl;
+	std::cout << "latency:" << stat.latency / (stat.numCommit+stat.numAbort) << std::endl;
 
 	return 0;
 }
