@@ -8,10 +8,10 @@ Txn::Txn(YDb *db) {
 }
 
 bool Txn::commit(Stat *stat) {
-	return true;
+//	return true;
 	bool lockedByMe = false;
 	int numAbort = 0;
-RTM_EXEC2(lock, lockedByMe, numAbort,
+//RTM_EXEC2(lock, lockedByMe, numAbort,
 	// validate phase
 	for (std::map<Record*, int>::iterator it = readSet.begin(); it != readSet.end(); it++) {
 		if (it->first->ver != it->second) {
@@ -36,7 +36,7 @@ RTM_EXEC2(lock, lockedByMe, numAbort,
 		it->first->value = it->second;
 		it->first->ver++;
 	}
-)
+//)
 	stat->numRTMTxn += 1;
 	stat->numRTMAbortTxn += numAbort;
 
