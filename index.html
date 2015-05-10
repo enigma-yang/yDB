@@ -90,7 +90,7 @@ Transaction layer is reponsible to provide transaction ability, and it's impleme
 
 <p>We implemented yDB using C++. As in Silo and DBX, we use fixed-length key(8 bytes). Storage layer manages  pair, in which pointer points to a recordthat contains version number and pointer to real data. This implementation adds another layer of indirection, but make storage layer fairly simple and decoupled from data type. B+ tree node is 256 bytes with fanout of 15. Transactions are supported via store procedure. Insert/read/update operations are supported, and delete are partially supported because we simply mark the deleted data but lack the garbage collector now. Scan can be supported but not supported now.</p>
 
-<p>We tested yDB on a machine with Intel(R) Core(TM) i7-4770 CPU @ 3.40GHz and 16 GB RAM. The benchmark we used is derived from DBX's and Silo's benchmark which are derived from YCSB benchmark. The modifications are:<br>
+<p>We tested yDB on a machine with Intel(R) Core(TM) i7-4770 CPU @ 3.40GHz and 16 GB RAM. The benchmark we used is derived from DBX's and Silo's benchmark which are derived from YCSB benchmark. The details are the following:<br>
 (1) Transactions are issued via function call to eliminate the network bottleneck<br>
 (2) Data are bulk-loaded before testing, and only read and write transactions are used in testing<br>
 (3) Read-write ratio is 80:20<br>
