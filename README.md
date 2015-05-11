@@ -69,6 +69,7 @@ Number of Threads | Throughput (ops)
 8	| 7.2E+06
 
 <a href="url"><img src="https://github.com/Zhiyuan-Yang/yDB/blob/occ/graph1.png?raw=true"></a>
+<a href="url"><img src="https://github.com/Zhiyuan-Yang/yDB/blob/occ/dbx.png?raw=true"></a>
 
 For performance, it achieves about same performance of Silo(B+ tree in Silo), but it's not as good as DBX(RTM B+ tree). There are two reasons. First, in derived benchmark, 80% of transactions are read transactions, and read transactions are read-only. DBX uses snapshot of data to support fast read-only transactions which requires no commit phase, while yDB use normal read-operation and commit phase to perform read transactions. This optimization is reported to improve performance dramatically. Actually we've implemented DBX's read-only transactions but never got the same improvement, which means the performance is very implementation-dependent. Second, DBX has better tuning on RTM retry threshold. the paper says DBX use different threshold for different kinds of RTM abort and for different height of tree, while yDB use the same threshold for all RTM transactions. Also, the tuning of this threshold is very important. Initially we used 3 as threshold, but got very poor scalability on 5-8 threads. Then we tuned it to 10 and got good scalability on 1-8 threads.
 
