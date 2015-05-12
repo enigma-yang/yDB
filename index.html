@@ -178,6 +178,10 @@ Transaction layer is reponsible to provide transaction ability, and it's impleme
 
 <p><a href="url"><img src="https://github.com/Zhiyuan-Yang/yDB/blob/occ/graph3.png?raw=true"></a></p>
 
+<p>To push yDB in an extreme case, we test it by having worker threads to issue transactions that atomically read the same data and increment the same data. The result is in the following graph. There is no surprise that yDB's throughput doesn't scale at all, because all transactions cause conflicts and RTM abort. After a number of retries, yDB degrades to use coarse-grained lock for synchronization. And we can see the throughput is almost same with coarse-grained version(see the graph from DBX paper above). </p>
+
+<p><a href="url"><img src="https://github.com/Zhiyuan-Yang/yDB/blob/occ/graph4.png?raw=true"></a></p>
+
 <h3>
 <a id="references" class="anchor" href="#references" aria-hidden="true"><span class="octicon octicon-link"></span></a>REFERENCES</h3>
 
